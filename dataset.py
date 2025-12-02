@@ -1,6 +1,7 @@
 """
 Dataset and data loading utilities for AIROGS challenge
 """
+
 import os
 import pandas as pd
 import numpy as np
@@ -26,10 +27,10 @@ class AIROGSDataset:
         self.df = pd.read_csv(self.labels_csv)
 
         # Convert labels to binary: RG=1, NRG=0
-        self.df['label'] = (self.df['class'] == 'RG').astype(int)
+        self.df["label"] = (self.df["class"] == "RG").astype(int)
 
         # Add full image paths
-        self.df['image_path'] = self.df['challenge_id'].apply(
+        self.df["image_path"] = self.df["challenge_id"].apply(
             lambda x: os.path.join(self.images_dir, f"{x}.jpg")
         )
 
@@ -39,11 +40,15 @@ class AIROGSDataset:
         print(f"Total images: {len(self.df)}")
         print(f"RG (Glaucoma): {(self.df['label'] == 1).sum()}")
         print(f"NRG (No Glaucoma): {(self.df['label'] == 0).sum()}")
-        print(f"Class imbalance ratio: 1:{(self.df['label'] == 0).sum() / (self.df['label'] == 1).sum():.1f}")
+        print(
+            f"Class imbalance ratio: 1:{(self.df['label'] == 0).sum() / (self.df['label'] == 1).sum():.1f}"
+        )
 
         return self.df
 
-    def split_data(self, train_split=0.8, val_split=0.1, test_split=0.1, random_seed=42):
+    def split_data(
+        self, train_split=0.8, val_split=0.1, test_split=0.1, random_seed=42
+    ):
         """Split data into train/val/test with stratification"""
         if self.df is None:
             self.load_data()
@@ -52,8 +57,8 @@ class AIROGSDataset:
         train_df, temp_df = train_test_split(
             self.df,
             test_size=(val_split + test_split),
-            stratify=self.df['label'],
-            random_state=random_seed
+            stratify=self.df["label"],
+            random_state=random_seed,
         )
 
         # Second split: val vs test
@@ -61,8 +66,8 @@ class AIROGSDataset:
         val_df, test_df = train_test_split(
             temp_df,
             test_size=(1 - val_size),
-            stratify=temp_df['label'],
-            random_state=random_seed
+            stratify=temp_df["label"],
+            random_state=random_seed,
         )
 
         self.train_df = train_df.reset_index(drop=True)
@@ -70,7 +75,9 @@ class AIROGSDataset:
         self.test_df = test_df.reset_index(drop=True)
 
         print(f"\nData split:")
-        print(f"Train: {len(self.train_df)} (RG: {(self.train_df['label'] == 1).sum()})")
+        print(
+            f"Train: {len(self.train_df)} (RG: {(self.train_df['label'] == 1).sum()})"
+        )
         print(f"Val: {len(self.val_df)} (RG: {(self.val_df['label'] == 1).sum()})")
         print(f"Test: {len(self.test_df)} (RG: {(self.test_df['label'] == 1).sum()})")
 
@@ -84,53 +91,55 @@ class AIROGSDataset:
         # Data augmentation for training
         if augment:
             train_datagen = ImageDataGenerator(
-                rescale=1./255,
-                horizontal_flip=config.AUGMENTATION.get('horizontal_flip', True),
-                vertical_flip=config.AUGMENTATION.get('vertical_flip', False),
-                rotation_range=config.AUGMENTATION.get('rotation_range', 15),
-                width_shift_range=config.AUGMENTATION.get('width_shift_range', 0.1),
-                height_shift_range=config.AUGMENTATION.get('height_shift_range', 0.1),
-                zoom_range=config.AUGMENTATION.get('zoom_range', 0.1),
-                brightness_range=config.AUGMENTATION.get('brightness_range', [0.8, 1.2]),
-                fill_mode='constant',
-                cval=0
+                rescale=1.0 / 255,
+                horizontal_flip=config.AUGMENTATION.get("horizontal_flip", True),
+                vertical_flip=config.AUGMENTATION.get("vertical_flip", False),
+                rotation_range=config.AUGMENTATION.get("rotation_range", 15),
+                width_shift_range=config.AUGMENTATION.get("width_shift_range", 0.1),
+                height_shift_range=config.AUGMENTATION.get("height_shift_range", 0.1),
+                zoom_range=config.AUGMENTATION.get("zoom_range", 0.1),
+                brightness_range=config.AUGMENTATION.get(
+                    "brightness_range", [0.8, 1.2]
+                ),
+                fill_mode="constant",
+                cval=0,
             )
         else:
-            train_datagen = ImageDataGenerator(rescale=1./255)
+            train_datagen = ImageDataGenerator(rescale=1.0 / 255)
 
         # No augmentation for validation/test
-        val_datagen = ImageDataGenerator(rescale=1./255)
+        val_datagen = ImageDataGenerator(rescale=1.0 / 255)
 
         # Create generators
         train_generator = train_datagen.flow_from_dataframe(
             self.train_df,
-            x_col='image_path',
-            y_col='label',
+            x_col="image_path",
+            y_col="label",
             target_size=(config.IMAGE_SIZE, config.IMAGE_SIZE),
             batch_size=batch_size,
-            class_mode='raw',
+            class_mode="raw",
             shuffle=True,
-            seed=config.RANDOM_SEED
+            seed=config.RANDOM_SEED,
         )
 
         val_generator = val_datagen.flow_from_dataframe(
             self.val_df,
-            x_col='image_path',
-            y_col='label',
+            x_col="image_path",
+            y_col="label",
             target_size=(config.IMAGE_SIZE, config.IMAGE_SIZE),
             batch_size=batch_size,
-            class_mode='raw',
-            shuffle=False
+            class_mode="raw",
+            shuffle=False,
         )
 
         test_generator = val_datagen.flow_from_dataframe(
             self.test_df,
-            x_col='image_path',
-            y_col='label',
+            x_col="image_path",
+            y_col="label",
             target_size=(config.IMAGE_SIZE, config.IMAGE_SIZE),
             batch_size=batch_size,
-            class_mode='raw',
-            shuffle=False
+            class_mode="raw",
+            shuffle=False,
         )
 
         return train_generator, val_generator, test_generator
@@ -147,8 +156,8 @@ def preprocess_image(image_path, image_size=384):
 
 def create_tf_dataset(df, batch_size=32, image_size=384, shuffle=False, augment=False):
     """Create TensorFlow dataset (alternative to ImageDataGenerator)"""
-    image_paths = df['image_path'].values
-    labels = df['label'].values
+    image_paths = df["image_path"].values
+    labels = df["label"].values
 
     def load_and_preprocess(path, label):
         img = preprocess_image(path, image_size)
@@ -167,10 +176,9 @@ def create_tf_dataset(df, batch_size=32, image_size=384, shuffle=False, augment=
         lambda path, label: tf.py_function(
             load_and_preprocess, [path, label], [tf.float32, tf.int64]
         ),
-        num_parallel_calls=tf.data.AUTOTUNE
+        num_parallel_calls=tf.data.AUTOTUNE,
     )
 
     dataset = dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
     return dataset
-

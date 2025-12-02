@@ -1,6 +1,7 @@
 """
 Inference script for AIROGS glaucoma detection
 """
+
 import os
 import argparse
 import numpy as np
@@ -21,7 +22,7 @@ def load_model(model_path):
 def preprocess_image(image_path, image_size=384):
     """Preprocess single image for inference"""
     # Load image
-    img = Image.open(image_path).convert('RGB')
+    img = Image.open(image_path).convert("RGB")
 
     # Resize
     img = img.resize((image_size, image_size), Image.BILINEAR)
@@ -62,7 +63,9 @@ def predict_single_image(model, image_path, image_size=384):
 
     # Output 4: Ungradability score (baseline uses prediction entropy as proxy)
     # Higher entropy = more uncertainty = potentially ungradable
-    entropy = -pred_proba * np.log(pred_proba + 1e-7) - (1 - pred_proba) * np.log(1 - pred_proba + 1e-7)
+    entropy = -pred_proba * np.log(pred_proba + 1e-7) - (1 - pred_proba) * np.log(
+        1 - pred_proba + 1e-7
+    )
     O4 = float(entropy)
 
     return O1, O2, O3, O4
@@ -79,7 +82,9 @@ def predict_batch(model, image_dir, output_csv, image_size=384):
         image_size: Image size for preprocessing
     """
     # Get all image files
-    image_files = [f for f in os.listdir(image_dir) if f.endswith(('.jpg', '.png', '.jpeg'))]
+    image_files = [
+        f for f in os.listdir(image_dir) if f.endswith((".jpg", ".png", ".jpeg"))
+    ]
     image_files.sort()
 
     print(f"Found {len(image_files)} images in {image_dir}")
@@ -96,22 +101,26 @@ def predict_batch(model, image_dir, output_csv, image_size=384):
         try:
             O1, O2, O3, O4 = predict_single_image(model, image_path, image_size)
 
-            results.append({
-                'challenge_id': image_id,
-                'glaucoma_score': O1,
-                'glaucoma_binary': O2,
-                'gradable': O3,
-                'ungradability_score': O4
-            })
+            results.append(
+                {
+                    "challenge_id": image_id,
+                    "glaucoma_score": O1,
+                    "glaucoma_binary": O2,
+                    "gradable": O3,
+                    "ungradability_score": O4,
+                }
+            )
         except Exception as e:
             print(f"Error processing {image_file}: {e}")
-            results.append({
-                'challenge_id': image_id,
-                'glaucoma_score': 0.0,
-                'glaucoma_binary': 0,
-                'gradable': 0,
-                'ungradability_score': 1.0
-            })
+            results.append(
+                {
+                    "challenge_id": image_id,
+                    "glaucoma_score": 0.0,
+                    "glaucoma_binary": 0,
+                    "gradable": 0,
+                    "ungradability_score": 1.0,
+                }
+            )
 
     # Save results
     df = pd.DataFrame(results)
@@ -129,17 +138,28 @@ def predict_batch(model, image_dir, output_csv, image_size=384):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='AIROGS inference script')
-    parser.add_argument('--model', type=str, required=True,
-                        help='Path to trained model (.h5 file)')
-    parser.add_argument('--image', type=str, default=None,
-                        help='Path to single image for inference')
-    parser.add_argument('--image-dir', type=str, default=None,
-                        help='Directory containing images for batch inference')
-    parser.add_argument('--output', type=str, default='predictions.csv',
-                        help='Output CSV file for predictions')
-    parser.add_argument('--image-size', type=int, default=384,
-                        help='Image size for preprocessing')
+    parser = argparse.ArgumentParser(description="AIROGS inference script")
+    parser.add_argument(
+        "--model", type=str, required=True, help="Path to trained model (.h5 file)"
+    )
+    parser.add_argument(
+        "--image", type=str, default=None, help="Path to single image for inference"
+    )
+    parser.add_argument(
+        "--image-dir",
+        type=str,
+        default=None,
+        help="Directory containing images for batch inference",
+    )
+    parser.add_argument(
+        "--output",
+        type=str,
+        default="predictions.csv",
+        help="Output CSV file for predictions",
+    )
+    parser.add_argument(
+        "--image-size", type=int, default=384, help="Image size for preprocessing"
+    )
 
     args = parser.parse_args()
 
@@ -169,7 +189,7 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
-    sys.exit(main())
 
+    sys.exit(main())

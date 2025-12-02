@@ -1,6 +1,7 @@
 """
 Configuration file for AIROGS Glaucoma Detection Baseline
 """
+
 import os
 
 # Paths
@@ -21,8 +22,8 @@ MODEL_BACKBONE = "efficientnet-b0"  # Options: "efficientnet-b0", "resnet50"
 # Class imbalance handling
 # RG: 3270, NRG: 98172 -> imbalance ratio ~1:30
 CLASS_WEIGHTS = {
-    0: 1.0,    # NRG (No Referable Glaucoma)
-    1: 30.0    # RG (Referable Glaucoma)
+    0: 1.0,  # NRG (No Referable Glaucoma)
+    1: 30.0,  # RG (Referable Glaucoma)
 }
 
 # Data split
@@ -53,4 +54,3 @@ PAUC_RANGE = (0.9, 1.0)  # Partial AUC range (90-100% specificity)
 
 # GPU settings
 USE_MIXED_PRECISION = True
-
