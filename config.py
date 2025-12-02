@@ -4,7 +4,7 @@ Configuration file for AIROGS Glaucoma Detection Baseline
 import os
 
 # Paths
-DATA_DIR = "./data"
+DATA_DIR = "./dataset/"
 TRAIN_IMAGES_DIR = os.path.join(DATA_DIR, "0")
 TRAIN_LABELS_CSV = os.path.join(DATA_DIR, "train_labels.csv")
 OUTPUT_DIR = "./outputs"
