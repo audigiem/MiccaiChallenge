@@ -50,12 +50,22 @@ cat > "$SLURM_SCRIPT" << EOF
 #SBATCH --time=${TIME_LIMIT}
 #SBATCH --cpus-per-task=${CPUS}
 #SBATCH --mem=${MEMORY}
-#SBATCH --gres=shard:1
+#SBATCH --partition=rtx6000
+#SBATCH --gres=gpu:1
 
 # Log job start
 echo "[$(date '+%Y-%m-%d %H:%M:%S')]  Job started on node: \$SLURM_NODELIST"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Job ID: \$SLURM_JOB_ID"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Configuration: MEM=${MEMORY}, CPUS=${CPUS}, TIME=${TIME_LIMIT}"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] GPU: \$CUDA_VISIBLE_DEVICES"
+
+# Load CUDA modules (adjust versions if needed)
+module load cuda/12.1 2>/dev/null || module load cuda/11.8 2>/dev/null || echo "No CUDA module found, using system CUDA"
+module load cudnn/8.9 2>/dev/null || module load cudnn 2>/dev/null || echo "No cuDNN module found, using system cuDNN"
+
+# Display loaded modules
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Loaded modules:"
+module list
 
 # Activate environment and run training
 source ${ENV_PATH}

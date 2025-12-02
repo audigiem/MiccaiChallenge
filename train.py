@@ -25,24 +25,48 @@ from evaluation import (
 
 def setup_gpu():
     """Configure GPU settings"""
+    import os
+
+    # Display environment variables for debugging
+    print("\n🔍 GPU Environment Check:")
+    print(f"  CUDA_VISIBLE_DEVICES: {os.environ.get('CUDA_VISIBLE_DEVICES', 'Not set')}")
+    print(f"  TF_CPP_MIN_LOG_LEVEL: {os.environ.get('TF_CPP_MIN_LOG_LEVEL', 'Not set')}")
+
+    # Check for GPU devices
     gpus = tf.config.list_physical_devices("GPU")
+
     if gpus:
         try:
-            # Set memory growth
-            for gpu in gpus:
+            print(f"\n✅ Found {len(gpus)} GPU(s):")
+            for i, gpu in enumerate(gpus):
+                print(f"   GPU {i}: {gpu.name}")
+                # Set memory growth to avoid OOM errors
                 tf.config.experimental.set_memory_growth(gpu, True)
+
+            # Get GPU details
+            gpu_details = tf.config.experimental.get_device_details(gpus[0])
+            if gpu_details:
+                print(f"   Device name: {gpu_details.get('device_name', 'Unknown')}")
 
             # Enable mixed precision for faster training
             if config.USE_MIXED_PRECISION:
                 policy = tf.keras.mixed_precision.Policy("mixed_float16")
                 tf.keras.mixed_precision.set_global_policy(policy)
-                print(f"Mixed precision enabled: {policy.name}")
+                print(f"\n⚡ Mixed precision enabled: {policy.name}")
 
-            print(f"Found {len(gpus)} GPU(s): {[gpu.name for gpu in gpus]}")
+            print(f"✅ GPU configuration successful!\n")
+
         except RuntimeError as e:
-            print(f"GPU configuration error: {e}")
+            print(f"❌ GPU configuration error: {e}")
+            print("⚠️  Falling back to CPU\n")
     else:
-        print("No GPU found, using CPU")
+        print("\n❌ No GPU found!")
+        print("⚠️  Training will run on CPU (very slow)")
+        print("   Possible causes:")
+        print("   - CUDA libraries not installed or not in PATH")
+        print("   - TensorFlow not compiled with GPU support")
+        print("   - GPU not allocated by SLURM (check --gres=gpu:1)")
+        print("   - Wrong TensorFlow version for your CUDA version\n")
 
 
 def train_model(args):
