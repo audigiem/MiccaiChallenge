@@ -359,7 +359,7 @@ def main():
     dataset = AIROGSDataset(labels_csv=args.labels_csv, images_dir=args.data_dir)
 
     dataset.load_data()
-    print(f"✅ Données chargées : {len(dataset.labels_df)} images")
+    print(f"✅ Données chargées : {len(dataset.labels_csv)} images")
 
     # Utiliser toutes les données comme test (pas de split)
     _, _, test_df = dataset.split_data(

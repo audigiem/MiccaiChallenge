@@ -28,8 +28,8 @@ CLASS_WEIGHTS = {
 
 # Data split
 TRAIN_SPLIT = 0.8
-VAL_SPLIT = 0.1
-TEST_SPLIT = 0.1
+VAL_SPLIT = 0.2
+TEST_SPLIT = 0.0  # No separate test set in this baseline
 RANDOM_SEED = 42
 
 # Augmentation parameters
