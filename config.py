@@ -6,7 +6,7 @@ import os
 
 # Paths
 DATA_DIR = "./dataset/"
-TRAIN_IMAGES_DIR = os.path.join(DATA_DIR, "0")
+TRAIN_IMAGES_DIR = [os.path.join(DATA_DIR, "0"), os.path.join(DATA_DIR, "2"), os.path.join(DATA_DIR, "3"), os.path.join(DATA_DIR, "1")]
 TRAIN_LABELS_CSV = os.path.join(DATA_DIR, "train_labels.csv")
 OUTPUT_DIR = "./outputs"
 MODELS_DIR = os.path.join(OUTPUT_DIR, "models")

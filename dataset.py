@@ -24,15 +24,27 @@ class AIROGSDataset:
 
     def load_data(self):
         """Load and preprocess the CSV labels"""
-        self.df = pd.read_csv(self.labels_csv)
 
-        # Convert labels to binary: RG=1, NRG=0
-        self.df["label"] = (self.df["class"] == "RG").astype(int)
+        if isinstance(self.images_dir, list):
+            dfs = []
+            for img_dir in self.images_dir:
+                df = pd.read_csv(self.labels_csv)
+                df["label"] = (df["class"] == "RG").astype(int)
+                df["image_path"] = df["challenge_id"].apply(
+                    lambda x: os.path.join(img_dir, f"{x}.jpg")
+                )
+                dfs.append(df)
+            self.df = pd.concat(dfs, ignore_index=True)
+        else:
+            self.df = pd.read_csv(self.labels_csv)
 
-        # Add full image paths
-        self.df["image_path"] = self.df["challenge_id"].apply(
-            lambda x: os.path.join(self.images_dir, f"{x}.jpg")
-        )
+            # Convert labels to binary: RG=1, NRG=0
+            self.df["label"] = (self.df["class"] == "RG").astype(int)
+
+            # Add full image paths
+            self.df["image_path"] = self.df["challenge_id"].apply(
+                lambda x: os.path.join(self.images_dir, f"{x}.jpg")
+            )
 
         # Check for missing files (optional, can be slow)
         # self.df = self.df[self.df['image_path'].apply(os.path.exists)]
