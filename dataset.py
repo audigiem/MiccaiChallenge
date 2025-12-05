@@ -46,47 +46,92 @@ class AIROGSDataset:
 
         return self.df
 
-    def split_data(
-        self, train_split=0.8, val_split=0.1, test_split=0.1, random_seed=42
-    ):
-        """Split data into train/val/test with stratification"""
-        if self.df is None:
-            self.load_data()
+    def split_data(self, train_split=0.7, val_split=0.15, test_split=0.15, random_seed=None):
+        """
+        Split labels dataframe into train/val/test and store them on the dataset instance.
+        Handles the special case where train=0, val=0, test=1.0 by returning
+        empty train/val DataFrames and the full dataframe as test.
+        """
+        total = train_split + val_split + test_split
+        if not np.isclose(total, 1.0):
+            raise ValueError(f"train_split + val_split + test_split must sum to 1.0 (got {total})")
+
+        df = getattr(self, "labels_df", None) or getattr(self, "df", None)
+        if df is None:
+            raise AttributeError("No dataframe found on dataset (expected `labels_df` or `df`)")
+
+        # Special-case: all data as test
+        if np.isclose(train_split, 0.0) and np.isclose(val_split, 0.0) and np.isclose(test_split, 1.0):
+            empty = pd.DataFrame(columns=df.columns)
+            self.train_df = empty
+            self.val_df = empty
+            self.test_df = df.copy().reset_index(drop=True)
+            return self.train_df, self.val_df, self.test_df
+
+        stratify_col = df["label"] if "label" in df.columns else None
 
         # First split: train vs (val+test)
-        train_df, temp_df = train_test_split(
-            self.df,
-            test_size=(val_split + test_split),
-            stratify=self.df["label"],
-            random_state=random_seed,
-        )
+        if np.isclose(train_split, 0.0):
+            train_df = pd.DataFrame(columns=df.columns)
+            temp_df = df.copy()
+        else:
+            temp_size = 1.0 - train_split
+            train_df, temp_df = train_test_split(
+                df,
+                test_size=temp_size,
+                random_state=random_seed,
+                stratify=stratify_col,
+            )
 
-        # Second split: val vs test
-        val_size = val_split / (val_split + test_split)
-        val_df, test_df = train_test_split(
-            temp_df,
-            test_size=(1 - val_size),
-            stratify=temp_df["label"],
-            random_state=random_seed,
-        )
+        # If val_split is zero, remaining is test
+        if np.isclose(val_split, 0.0):
+            val_df = pd.DataFrame(columns=df.columns)
+            test_df = temp_df
+        else:
+            # compute relative val size w.r.t. temp_df
+            val_relative = val_split / (val_split + test_split)
+            strat_temp = temp_df["label"] if "label" in temp_df.columns else None
+            val_df, test_df = train_test_split(
+                temp_df,
+                test_size=(1.0 - val_relative),
+                random_state=random_seed,
+                stratify=strat_temp,
+            )
 
+        # Store on instance and return
         self.train_df = train_df.reset_index(drop=True)
         self.val_df = val_df.reset_index(drop=True)
         self.test_df = test_df.reset_index(drop=True)
 
-        print(f"\nData split:")
-        print(
-            f"Train: {len(self.train_df)} (RG: {(self.train_df['label'] == 1).sum()})"
-        )
-        print(f"Val: {len(self.val_df)} (RG: {(self.val_df['label'] == 1).sum()})")
-        print(f"Test: {len(self.test_df)} (RG: {(self.test_df['label'] == 1).sum()})")
-
         return self.train_df, self.val_df, self.test_df
+
+
 
     def create_generators(self, batch_size=32, augment=True):
         """Create data generators for training"""
+        # Ensure splits exist
         if self.train_df is None:
             self.split_data()
+
+        def ensure_image_path_col(df):
+            if df is None:
+                return df
+            # If column already present, return as-is
+            if "image_path" in df.columns:
+                return df
+            # Try to build image_path from challenge_id
+            if "challenge_id" in df.columns:
+                df = df.copy()
+                df["image_path"] = df["challenge_id"].apply(
+                    lambda x: os.path.join(self.images_dir, f"{x}.jpg")
+                )
+                return df
+            # If neither column is present, return original (flow_from_dataframe will raise a clear error later)
+            return df
+
+        train_df = ensure_image_path_col(self.train_df)
+        val_df = ensure_image_path_col(self.val_df)
+        test_df = ensure_image_path_col(self.test_df)
 
         # Data augmentation for training
         if augment:
@@ -98,9 +143,7 @@ class AIROGSDataset:
                 width_shift_range=config.AUGMENTATION.get("width_shift_range", 0.1),
                 height_shift_range=config.AUGMENTATION.get("height_shift_range", 0.1),
                 zoom_range=config.AUGMENTATION.get("zoom_range", 0.1),
-                brightness_range=config.AUGMENTATION.get(
-                    "brightness_range", [0.8, 1.2]
-                ),
+                brightness_range=config.AUGMENTATION.get("brightness_range", [0.8, 1.2]),
                 fill_mode="constant",
                 cval=0,
             )
@@ -110,40 +153,28 @@ class AIROGSDataset:
         # No augmentation for validation/test
         val_datagen = ImageDataGenerator(rescale=1.0 / 255)
 
-        # Create generators
-        train_generator = train_datagen.flow_from_dataframe(
-            self.train_df,
-            x_col="image_path",
-            y_col="label",
-            target_size=(config.IMAGE_SIZE, config.IMAGE_SIZE),
-            batch_size=batch_size,
-            class_mode="raw",
-            shuffle=True,
-            seed=config.RANDOM_SEED,
-        )
+        def make_generator(datagen, df, shuffle):
+            if df is None or len(df) == 0:
+                return None
+            # Validate required columns before calling keras
+            if "image_path" not in df.columns or "label" not in df.columns:
+                raise KeyError("DataFrame must contain 'image_path' and 'label' columns before creating generator.")
+            return datagen.flow_from_dataframe(
+                df,
+                x_col="image_path",
+                y_col="label",
+                target_size=(config.IMAGE_SIZE, config.IMAGE_SIZE),
+                batch_size=batch_size,
+                class_mode="raw",
+                shuffle=shuffle,
+                seed=config.RANDOM_SEED,
+            )
 
-        val_generator = val_datagen.flow_from_dataframe(
-            self.val_df,
-            x_col="image_path",
-            y_col="label",
-            target_size=(config.IMAGE_SIZE, config.IMAGE_SIZE),
-            batch_size=batch_size,
-            class_mode="raw",
-            shuffle=False,
-        )
-
-        test_generator = val_datagen.flow_from_dataframe(
-            self.test_df,
-            x_col="image_path",
-            y_col="label",
-            target_size=(config.IMAGE_SIZE, config.IMAGE_SIZE),
-            batch_size=batch_size,
-            class_mode="raw",
-            shuffle=False,
-        )
+        train_generator = make_generator(train_datagen, train_df, shuffle=True)
+        val_generator = make_generator(val_datagen, val_df, shuffle=False)
+        test_generator = make_generator(val_datagen, test_df, shuffle=False)
 
         return train_generator, val_generator, test_generator
-
 
 def preprocess_image(image_path, image_size=384):
     """Preprocess a single image"""

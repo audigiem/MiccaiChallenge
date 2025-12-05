@@ -170,46 +170,7 @@ def train_model(args):
         json.dump(history_dict, f, indent=2)
     print(f"Training history saved to: {history_path}")
 
-    # Evaluate on test set
-    print("\n🔍 Evaluating on test set...")
-    results = evaluate_model(model, test_gen, test_df)
-    print_evaluation_results(results)
-
-    # Save evaluation results
-    results_path = os.path.join(config.OUTPUT_DIR, f"{model_name}_results.json")
-    results_to_save = {
-        k: (
-            float(v)
-            if isinstance(v, (np.float32, np.float64, np.int32, np.int64))
-            else v
-        )
-        for k, v in results.items()
-        if k not in ["y_true", "y_pred_proba", "y_pred_binary", "confusion_matrix"]
-    }
-    results_to_save["confusion_matrix"] = results["confusion_matrix"].tolist()
-
-    with open(results_path, "w") as f:
-        json.dump(results_to_save, f, indent=2)
-    print(f"Results saved to: {results_path}")
-
-    # Generate plots
-    print("\n📈 Generating visualizations...")
-    plots_dir = os.path.join(config.OUTPUT_DIR, "plots")
-    os.makedirs(plots_dir, exist_ok=True)
-
-    plot_roc_curve(results, save_path=os.path.join(plots_dir, f"{model_name}_roc.png"))
-    plot_confusion_matrix(
-        results, save_path=os.path.join(plots_dir, f"{model_name}_confusion.png")
-    )
-    plot_prediction_distribution(
-        results, save_path=os.path.join(plots_dir, f"{model_name}_distribution.png")
-    )
-
-    print("\n✅ Training complete!")
-    print(f"End time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("=" * 60 + "\n")
-
-    return model, history, results
+    return model, history
 
 
 def main():
@@ -265,7 +226,7 @@ def main():
         config.MODEL_BACKBONE = args.backbone
 
     # Train model
-    model, history, results = train_model(args)
+    model, history = train_model(args)
 
     return 0
 

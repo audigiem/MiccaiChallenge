@@ -14,6 +14,10 @@ from sklearn.metrics import (
 import matplotlib.pyplot as plt
 import seaborn as sns
 import config
+import tensorflow as tf
+import argparse
+from dataset import AIROGSDataset
+import os
 
 
 def compute_partial_auc(y_true, y_pred, specificity_range=(0.9, 1.0)):
@@ -192,7 +196,7 @@ def print_evaluation_results(results):
     print("=" * 60 + "\n")
 
 
-def plot_roc_curve(results, save_path=None):
+def plot_roc_curve(results, save_path=None, show=False):
     """Plot ROC curve with partial AUC highlighted"""
     fpr, tpr, _ = roc_curve(results["y_true"], results["y_pred_proba"])
     specificity = 1 - fpr
@@ -242,10 +246,14 @@ def plot_roc_curve(results, save_path=None):
         print(f"ROC curve saved to {save_path}")
 
     plt.tight_layout()
-    return plt.gcf()
+
+    if not show:
+        plt.close()
+
+    return plt.gcf() if show else None
 
 
-def plot_confusion_matrix(results, save_path=None):
+def plot_confusion_matrix(results, save_path=None, show=False):
     """Plot confusion matrix"""
     cm = results["confusion_matrix"]
 
@@ -270,10 +278,14 @@ def plot_confusion_matrix(results, save_path=None):
         print(f"Confusion matrix saved to {save_path}")
 
     plt.tight_layout()
-    return plt.gcf()
+
+    if not show:
+        plt.close()
+
+    return plt.gcf() if show else None
 
 
-def plot_prediction_distribution(results, save_path=None):
+def plot_prediction_distribution(results, save_path=None, show=False):
     """Plot distribution of predicted probabilities"""
     y_true = results["y_true"]
     y_pred_proba = results["y_pred_proba"]
@@ -317,4 +329,90 @@ def plot_prediction_distribution(results, save_path=None):
         print(f"Prediction distribution saved to {save_path}")
 
     plt.tight_layout()
-    return plt.gcf()
+
+    if not show:
+        plt.close()
+
+    return plt.gcf() if show else None
+
+def main():
+    parser = argparse.ArgumentParser(description="Évaluation du modèle AIROGS")
+    parser.add_argument("--model-path", type=str, required=True, help="Chemin du modèle .h5")
+    parser.add_argument("--data-dir", type=str, required=True, help="Répertoire des images")
+    parser.add_argument("--labels-csv", type=str, required=True, help="CSV des labels")
+    parser.add_argument("--batch-size", type=int, default=32, help="Batch size")
+    parser.add_argument("--output-dir", type=str, default="evaluation_results", help="Répertoire de sortie pour les figures et résultats")
+    parser.add_argument("--show-plots", action="store_true", help="Afficher les graphiques (pour exécution locale)")
+    args = parser.parse_args()
+
+    # Créer le répertoire de sortie
+    os.makedirs(args.output_dir, exist_ok=True)
+    print(f"\n📁 Répertoire de sortie : {args.output_dir}")
+
+    # Chargement du modèle
+    print(f"\n🔄 Chargement du modèle depuis {args.model_path}...")
+    model = tf.keras.models.load_model(args.model_path, compile=False)
+    print("✅ Modèle chargé avec succès")
+
+    # Préparation du dataset
+    print(f"\n📂 Chargement des données depuis {args.data_dir}...")
+    dataset = AIROGSDataset(labels_csv=args.labels_csv, images_dir=args.data_dir)
+
+    dataset.load_data()
+    print(f"✅ Données chargées : {len(dataset.labels_df)} images")
+
+    # Utiliser toutes les données comme test (pas de split)
+    _, _, test_df = dataset.split_data(
+        train_split=0.0, val_split=0.0, test_split=1.0, random_seed=config.RANDOM_SEED
+    )
+    _, _, test_gen = dataset.create_generators(
+        batch_size=args.batch_size, augment=False
+    )
+
+    # Évaluation
+    print("\n🔎 Évaluation du modèle sur le jeu de test...")
+    results = evaluate_model(model, test_gen, test_df)
+    print_evaluation_results(results)
+
+    # Sauvegarder les résultats textuels
+    results_file = os.path.join(args.output_dir, "evaluation_results.txt")
+    with open(results_file, "w") as f:
+        f.write("=" * 60 + "\n")
+        f.write("AIROGS CHALLENGE - EVALUATION RESULTS\n")
+        f.write("=" * 60 + "\n\n")
+        f.write("CHALLENGE METRICS:\n")
+        f.write(f"  α - Partial AUC (90-100% spec): {results['partial_auc']:.4f}\n")
+        f.write(f"  β - Sensitivity @ 95% spec:     {results['sensitivity_at_95_specificity']:.4f}\n")
+        f.write(f"      (actual specificity:         {results['actual_specificity']:.4f})\n")
+        f.write(f"      (threshold used:             {results['threshold_at_95_spec']:.4f})\n\n")
+        f.write("STANDARD METRICS:\n")
+        f.write(f"  AUC-ROC:      {results['auc']:.4f}\n")
+        f.write(f"  Accuracy:     {results['accuracy']:.4f}\n")
+        f.write(f"  Precision:    {results['precision']:.4f}\n")
+        f.write(f"  Recall:       {results['recall']:.4f}\n")
+        f.write(f"  F1-Score:     {results['f1_score']:.4f}\n")
+        f.write(f"  Specificity:  {results['specificity']:.4f}\n\n")
+        f.write("CONFUSION MATRIX:\n")
+        f.write(f"  True Positives:  {results['true_positives']}\n")
+        f.write(f"  False Positives: {results['false_positives']}\n")
+        f.write(f"  True Negatives:  {results['true_negatives']}\n")
+        f.write(f"  False Negatives: {results['false_negatives']}\n")
+        f.write("=" * 60 + "\n")
+    print(f"✅ Résultats sauvegardés dans {results_file}")
+
+    # Sauvegarder les figures
+    print("\n📊 Génération et sauvegarde des graphiques...")
+    roc_path = os.path.join(args.output_dir, "roc_curve.png")
+    plot_roc_curve(results, save_path=roc_path, show=args.show_plots)
+
+    cm_path = os.path.join(args.output_dir, "confusion_matrix.png")
+    plot_confusion_matrix(results, save_path=cm_path, show=args.show_plots)
+
+    dist_path = os.path.join(args.output_dir, "prediction_distribution.png")
+    plot_prediction_distribution(results, save_path=dist_path, show=args.show_plots)
+
+    print("\n✅ Évaluation terminée avec succès!")
+
+if __name__ == "__main__":
+    # "python evaluation.py --model-path='firstModel.h5' --data-dir='5' --labels-csv='train_labels.csv' --batch-size=32"
+    main()
