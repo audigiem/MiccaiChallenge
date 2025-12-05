@@ -66,87 +66,100 @@ TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 SLURM_SCRIPT="eval_run/slurm_eval_${TIMESTAMP}.sh"
 
 # Create SLURM batch script
-cat > "$SLURM_SCRIPT" << EOF
+cat > "$SLURM_SCRIPT" << 'EOF'
 #!/bin/bash
-#SBATCH --job-name=${JOB_NAME}
-#SBATCH --output=eval_run/output/${JOB_NAME}_${TIMESTAMP}.out
-#SBATCH --error=eval_run/stderr/${JOB_NAME}_${TIMESTAMP}.err
-#SBATCH --time=${TIME_LIMIT}
-#SBATCH --cpus-per-task=${CPUS}
-#SBATCH --mem=${MEMORY}
+#SBATCH --job-name=JOBNAME_PLACEHOLDER
+#SBATCH --output=eval_run/output/JOBNAME_PLACEHOLDER_TIMESTAMP_PLACEHOLDER.out
+#SBATCH --error=eval_run/stderr/JOBNAME_PLACEHOLDER_TIMESTAMP_PLACEHOLDER.err
+#SBATCH --time=TIME_PLACEHOLDER
+#SBATCH --cpus-per-task=CPUS_PLACEHOLDER
+#SBATCH --mem=MEMORY_PLACEHOLDER
 #SBATCH --partition=rtx6000
 #SBATCH --gres=gpu:1
 
 # Log job start
-echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] =========================================="
-echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] AIROGS Challenge - Evaluation on Cluster"
-echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] =========================================="
-echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] Job ID: \\$SLURM_JOB_ID"
-echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] Node: \\$SLURM_NODELIST"
-echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] Configuration: MEM=${MEMORY}, CPUS=${CPUS}, TIME=${TIME_LIMIT}"
-echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] GPU: \\$CUDA_VISIBLE_DEVICES"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] =========================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] AIROGS Challenge - Evaluation on Cluster"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] =========================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Job ID: $SLURM_JOB_ID"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Node: $SLURM_NODELIST"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Configuration: MEM=MEMORY_PLACEHOLDER, CPUS=CPUS_PLACEHOLDER, TIME=TIME_PLACEHOLDER"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] GPU: $CUDA_VISIBLE_DEVICES"
 echo ""
 
 # Load CUDA modules
-echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] Loading CUDA modules..."
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Loading CUDA modules..."
 module load cuda/12.1 2>/dev/null || module load cuda/11.8 2>/dev/null || echo "No CUDA module found, using system CUDA"
 module load cudnn/8.9 2>/dev/null || module load cudnn 2>/dev/null || echo "No cuDNN module found, using system cuDNN"
 
 # Display loaded modules
-echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] Loaded modules:"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Loaded modules:"
 module list
 echo ""
 
 # Vérifier la disponibilité du GPU
-echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] Checking GPU availability..."
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Checking GPU availability..."
 nvidia-smi
 echo ""
 
 # Activate environment
-echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] Activating virtual environment..."
-source ${ENV_PATH}
-export OMP_NUM_THREADS=${CPUS}
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Activating virtual environment..."
+source ENV_PATH_PLACEHOLDER
+export OMP_NUM_THREADS=CPUS_PLACEHOLDER
 export TF_CPP_MIN_LOG_LEVEL=1
 
-echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] =========================================="
-echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] Starting evaluation..."
-echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] =========================================="
-echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] Model: ${MODEL_PATH}"
-echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] Data dir: ${DATA_DIR}"
-echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] Labels: ${LABELS_CSV}"
-echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] Output: ${OUTPUT_DIR}"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] =========================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting evaluation..."
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] =========================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Model: MODEL_PATH_PLACEHOLDER"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Data dir: DATA_DIR_PLACEHOLDER"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Labels: LABELS_CSV_PLACEHOLDER"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Output: OUTPUT_DIR_PLACEHOLDER"
 echo ""
 
 # Exécuter l'évaluation
-python3 evaluation.py \\
-    --model-path="${MODEL_PATH}" \\
-    --data-dir="${DATA_DIR}" \\
-    --labels-csv="${LABELS_CSV}" \\
-    --batch-size=${BATCH_SIZE} \\
-    --output-dir="${OUTPUT_DIR}"
+python3 evaluation.py \
+    --model-path="MODEL_PATH_PLACEHOLDER" \
+    --data-dir="DATA_DIR_PLACEHOLDER" \
+    --labels-csv="LABELS_CSV_PLACEHOLDER" \
+    --batch-size=BATCH_SIZE_PLACEHOLDER \
+    --output-dir="OUTPUT_DIR_PLACEHOLDER"
 
-PYTHON_EXIT_CODE=\\$?
+PYTHON_EXIT_CODE=$?
 
 echo ""
-echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] =========================================="
-echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] Evaluation completed with exit code: \\$PYTHON_EXIT_CODE"
-echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] End time: \\$(date)"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] =========================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Evaluation completed with exit code: $PYTHON_EXIT_CODE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] End time: $(date)"
 
 # Final summary
-if [ \\$PYTHON_EXIT_CODE -eq 0 ]; then
-    echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] Evaluation completed successfully!"
+if [ $PYTHON_EXIT_CODE -eq 0 ]; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Evaluation completed successfully!"
 
     # List generated files
-    if [ -d "${OUTPUT_DIR}" ]; then
-        echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] Generated files:"
-        ls -lh "${OUTPUT_DIR}"
+    if [ -d "OUTPUT_DIR_PLACEHOLDER" ]; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Generated files:"
+        ls -lh "OUTPUT_DIR_PLACEHOLDER"
     fi
 else
-    echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] Evaluation failed!"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Evaluation failed!"
 fi
 
-echo "[\\$(date '+%Y-%m-%d %H:%M:%S')] =========================================="
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] =========================================="
 EOF
+
+# Replace placeholders with actual values
+sed -i "s|JOBNAME_PLACEHOLDER|${JOB_NAME}|g" "$SLURM_SCRIPT"
+sed -i "s|TIMESTAMP_PLACEHOLDER|${TIMESTAMP}|g" "$SLURM_SCRIPT"
+sed -i "s|TIME_PLACEHOLDER|${TIME_LIMIT}|g" "$SLURM_SCRIPT"
+sed -i "s|CPUS_PLACEHOLDER|${CPUS}|g" "$SLURM_SCRIPT"
+sed -i "s|MEMORY_PLACEHOLDER|${MEMORY}|g" "$SLURM_SCRIPT"
+sed -i "s|ENV_PATH_PLACEHOLDER|${ENV_PATH}|g" "$SLURM_SCRIPT"
+sed -i "s|MODEL_PATH_PLACEHOLDER|${MODEL_PATH}|g" "$SLURM_SCRIPT"
+sed -i "s|DATA_DIR_PLACEHOLDER|${DATA_DIR}|g" "$SLURM_SCRIPT"
+sed -i "s|LABELS_CSV_PLACEHOLDER|${LABELS_CSV}|g" "$SLURM_SCRIPT"
+sed -i "s|OUTPUT_DIR_PLACEHOLDER|${OUTPUT_DIR}|g" "$SLURM_SCRIPT"
+sed -i "s|BATCH_SIZE_PLACEHOLDER|${BATCH_SIZE}|g" "$SLURM_SCRIPT"
 
 # Submit the job
 echo "Submitting evaluation job to SLURM..."
