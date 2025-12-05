@@ -9,14 +9,14 @@
 #SBATCH --partition=gpu
 
 # Configuration
-MODEL_PATH="firstModel.h5"
-DATA_DIR="5"
-LABELS_CSV="train_labels.csv"
+MODEL_PATH="outputs/models/airogs_baseline_efficientnet-b0_20251202_132402_final.h5"
+DATA_DIR="dataset/1"
+LABELS_CSV="dataset/train_labels.csv"
 BATCH_SIZE=32
 OUTPUT_DIR="evaluation_results"
 
 # Activation de l'environnement virtuel (si nécessaire)
-# source /path/to/venv/bin/activate
+source ~/MiccaiChallenge/bin/activate
 
 # Afficher les informations système
 echo "=========================================="
