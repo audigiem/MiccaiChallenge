@@ -8,7 +8,7 @@ MEMORY="4GB"
 CPUS="8"
 TIME_LIMIT="4:00:00"
 SCRIPT_NAME="train.py"
-ENV_PATH="~/.MolesSegmentationDLMA/bin/activate"
+ENV_PATH="~/MiccaiChallenge/bin/activate"
 JOB_NAME="baseline_training"
 
 # Parse arguments
