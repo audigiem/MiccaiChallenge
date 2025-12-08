@@ -5,7 +5,7 @@
 #SBATCH --time=08:00:00
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
-#SBATCH --partition=rtx6000
+#SBATCH --partition=v100
 #SBATCH --gres=gpu:1
 
 # Training script for datasets 0, 1, and 4 (no augmentation)

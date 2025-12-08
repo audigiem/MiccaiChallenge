@@ -14,13 +14,6 @@ import json
 import config
 from dataset import AIROGSDataset
 from model import create_baseline_model, compile_model, get_callbacks
-from evaluation import (
-    evaluate_model,
-    print_evaluation_results,
-    plot_roc_curve,
-    plot_confusion_matrix,
-    plot_prediction_distribution,
-)
 
 
 def setup_gpu():
