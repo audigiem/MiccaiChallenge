@@ -5,7 +5,7 @@
 #SBATCH --time=08:00:00
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
-#SBATCH --partition=rtx6000
+#SBATCH --partition=v100
 #SBATCH --gres=gpu:1
 
 # Training script for datasets 0, 1, and 4 (no augmentation)
@@ -23,7 +23,16 @@ echo ""
 MEMORY="32G"
 CPUS="8"
 TIME_LIMIT="08:00:00"
-ENV_PATH="~/MiccaiChallenge/bin/activate"
+# Try multiple possible venv paths
+if [ -f "$HOME/MiccaiChallenge/bin/activate" ]; then
+    ENV_PATH="$HOME/MiccaiChallenge/bin/activate"
+elif [ -f "venv/bin/activate" ]; then
+    ENV_PATH="venv/bin/activate"
+elif [ -f "../venv/bin/activate" ]; then
+    ENV_PATH="../venv/bin/activate"
+else
+    ENV_PATH=""
+fi
 SCRIPT_NAME="train.py"
 
 echo "Configuration:"
@@ -58,9 +67,18 @@ echo ""
 
 # Activate environment and run training
 echo "Activating virtual environment..."
-source ${ENV_PATH}
+if [ -n "$ENV_PATH" ] && [ -f "$ENV_PATH" ]; then
+    source ${ENV_PATH}
+    echo "Virtual environment activated: $ENV_PATH"
+else
+    echo "No virtual environment found, using system Python"
+fi
 export OMP_NUM_THREADS=${CPUS}
 export TF_CPP_MIN_LOG_LEVEL=1
+
+# Fix cuDNN convolution algorithm picker issues
+export XLA_FLAGS=--xla_gpu_strict_conv_algorithm_picker=false
+export TF_ENABLE_ONEDNN_OPTS=0
 
 echo ""
 echo "=============================================="
