@@ -50,7 +50,7 @@ cat > "$SLURM_SCRIPT" << EOF
 #SBATCH --time=${TIME_LIMIT}
 #SBATCH --cpus-per-task=${CPUS}
 #SBATCH --mem=${MEMORY}
-#SBATCH --partition=rtx6000
+#SBATCH --partition=a40
 #SBATCH --gres=gpu:1
 
 # Log job start
@@ -60,12 +60,20 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] Configuration: MEM=${MEMORY}, CPUS=${CPUS},
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] GPU: \$CUDA_VISIBLE_DEVICES"
 
 # Load CUDA modules (adjust versions if needed)
-module load cuda/12.1 2>/dev/null || module load cuda/11.8 2>/dev/null || echo "No CUDA module found, using system CUDA"
-module load cudnn/8.9 2>/dev/null || module load cudnn 2>/dev/null || echo "No cuDNN module found, using system cuDNN"
+if command -v module &> /dev/null; then
+    module load cuda/12.1 2>/dev/null || module load cuda/11.8 2>/dev/null || echo "No CUDA module found, using system CUDA"
+    module load cudnn/8.9 2>/dev/null || module load cudnn 2>/dev/null || echo "No cuDNN module found, using system cuDNN"
+else
+    echo "Module command not available, using system CUDA/cuDNN"
+fi
 
 # Display loaded modules
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Loaded modules:"
-module list
+if command -v module &> /dev/null; then
+    module list
+else
+    echo "Module system not available"
+fi
 
 # Activate environment and run training
 source ${ENV_PATH}

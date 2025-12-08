@@ -68,9 +68,9 @@ class AIROGSDataset:
         if not np.isclose(total, 1.0):
             raise ValueError(f"train_split + val_split + test_split must sum to 1.0 (got {total})")
 
-        df = getattr(self, "labels_df", None) or getattr(self, "df", None)
-        if df is None:
-            raise AttributeError("No dataframe found on dataset (expected `labels_df` or `df`)")
+        if self.df is None:
+            raise AttributeError("No dataframe found on dataset. Please call load_data() first.")
+        df = self.df
 
         # Special-case: all data as test
         if np.isclose(train_split, 0.0) and np.isclose(val_split, 0.0) and np.isclose(test_split, 1.0):

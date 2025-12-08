@@ -89,12 +89,20 @@ echo ""
 
 # Load CUDA modules
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Loading CUDA modules..."
-module load cuda/12.1 2>/dev/null || module load cuda/11.8 2>/dev/null || echo "No CUDA module found, using system CUDA"
-module load cudnn/8.9 2>/dev/null || module load cudnn 2>/dev/null || echo "No cuDNN module found, using system cuDNN"
+if command -v module &> /dev/null; then
+    module load cuda/12.1 2>/dev/null || module load cuda/11.8 2>/dev/null || echo "No CUDA module found, using system CUDA"
+    module load cudnn/8.9 2>/dev/null || module load cudnn 2>/dev/null || echo "No cuDNN module found, using system cuDNN"
+else
+    echo "Module command not available, using system CUDA/cuDNN"
+fi
 
 # Display loaded modules
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Loaded modules:"
-module list
+if command -v module &> /dev/null; then
+    module list
+else
+    echo "Module system not available"
+fi
 echo ""
 
 # Vérifier la disponibilité du GPU
