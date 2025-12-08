@@ -359,6 +359,16 @@ def main():
     dataset = AIROGSDataset(labels_csv=args.labels_csv, images_dir=args.data_dir)
 
     dataset.load_data()
+
+    # AJOUT : Filtrer uniquement les images qui existent réellement
+    dataset.df = dataset.df[dataset.df['image_path'].apply(os.path.exists)]
+    print(f"✅ Images valides trouvées : {len(dataset.df)}")
+
+    if len(dataset.df) == 0:
+        raise ValueError(f"❌ Aucune image trouvée dans {args.data_dir}. Vérifiez le chemin.")
+
+    print(f"   RG (Glaucoma): {(dataset.df['label'] == 1).sum()}")
+    print(f"   NRG (No Glaucoma): {(dataset.df['label'] == 0).sum()}")
     print(f"✅ Données chargées : {len(dataset.labels_csv)} images")
 
     # Utiliser toutes les données comme test (pas de split)
