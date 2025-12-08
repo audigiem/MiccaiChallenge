@@ -58,6 +58,27 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Auto-detect labels file based on dataset directory
+# If DATA_DIR is like "dataset/1" or "dataset/datasetPart1/1", extract the dataset number
+if [[ "$LABELS_CSV" == "dataset/train_labels.csv" ]]; then
+    # Extract dataset identifier (e.g., "1" from "dataset/1" or "dataset/datasetPart1/1")
+    DATASET_ID=$(basename "$DATA_DIR")
+    DATASET_PARENT=$(dirname "$DATA_DIR")
+
+    # Check if a specific labels file exists for this dataset
+    if [[ -f "dataset/train_labels_${DATASET_ID}.csv" ]]; then
+        LABELS_CSV="dataset/train_labels_${DATASET_ID}.csv"
+        echo "ℹ️  Auto-detected labels file: $LABELS_CSV"
+    elif [[ -f "${DATASET_PARENT}/train_labels_${DATASET_ID}.csv" ]]; then
+        LABELS_CSV="${DATASET_PARENT}/train_labels_${DATASET_ID}.csv"
+        echo "ℹ️  Auto-detected labels file: $LABELS_CSV"
+    else
+        echo "⚠️  Warning: No specific labels file found for dataset '$DATASET_ID'"
+        echo "    Using default: $LABELS_CSV"
+        echo "    You may need to run: ./run_split_labels.sh first"
+    fi
+fi
+
 # Create directories
 mkdir -p eval_run/{stderr,output}
 

@@ -107,8 +107,47 @@ def evaluate_model(model, test_generator, test_df):
         Dictionary of evaluation metrics
     """
     # Get predictions
+    print(f"\n🔍 Debug Info:")
+    print(f"   Test generator samples: {test_generator.n}")
+    print(f"   Test dataframe size: {len(test_df)}")
+    print(f"   Batch size: {test_generator.batch_size}")
+    print(f"   Number of batches: {len(test_generator)}")
+
     y_pred_proba = model.predict(test_generator, verbose=1).flatten()
     y_true = test_df["label"].values
+
+    print(f"\n🔍 Prediction Debug:")
+    print(f"   y_pred_proba shape: {y_pred_proba.shape}")
+    print(f"   y_true shape: {y_true.shape}")
+    print(f"   y_pred_proba contains NaN: {np.isnan(y_pred_proba).any()}")
+    print(f"   Number of NaN in predictions: {np.isnan(y_pred_proba).sum()}")
+    print(f"   y_pred_proba min: {np.nanmin(y_pred_proba) if not np.all(np.isnan(y_pred_proba)) else 'all NaN'}")
+    print(f"   y_pred_proba max: {np.nanmax(y_pred_proba) if not np.all(np.isnan(y_pred_proba)) else 'all NaN'}")
+    print(f"   y_pred_proba mean: {np.nanmean(y_pred_proba) if not np.all(np.isnan(y_pred_proba)) else 'all NaN'}")
+
+    # Check for size mismatch
+    if len(y_pred_proba) != len(y_true):
+        raise ValueError(
+            f"Size mismatch: predictions ({len(y_pred_proba)}) != labels ({len(y_true)}). "
+            f"Generator has {test_generator.n} samples."
+        )
+
+    # Handle NaN values
+    if np.isnan(y_pred_proba).any():
+        print(f"\n⚠️  WARNING: Found {np.isnan(y_pred_proba).sum()} NaN values in predictions!")
+        print(f"   This usually means:")
+        print(f"   1. Model encountered invalid images")
+        print(f"   2. Generator and DataFrame are out of sync")
+        print(f"   3. Model output layer has numerical issues")
+
+        # Try to identify which samples have NaN
+        nan_indices = np.where(np.isnan(y_pred_proba))[0]
+        print(f"\n   NaN at indices: {nan_indices[:10]}..." if len(nan_indices) > 10 else f"\n   NaN at indices: {nan_indices}")
+
+        raise ValueError(
+            f"Predictions contain {np.isnan(y_pred_proba).sum()} NaN values. "
+            "Cannot compute metrics."
+        )
 
     # Standard metrics
     auc_score = roc_auc_score(y_true, y_pred_proba)
@@ -369,7 +408,35 @@ def main():
 
     print(f"   RG (Glaucoma): {(dataset.df['label'] == 1).sum()}")
     print(f"   NRG (No Glaucoma): {(dataset.df['label'] == 0).sum()}")
-    print(f"✅ Données chargées : {len(dataset.labels_csv)} images")
+
+    # Vérifier plus en détail les fichiers
+    print(f"\n🔍 Vérification des fichiers image...")
+    missing_files = []
+    corrupted_files = []
+    valid_files = []
+
+    for idx, row in dataset.df.iterrows():
+        img_path = row['image_path']
+        if not os.path.exists(img_path):
+            missing_files.append(img_path)
+        elif os.path.getsize(img_path) == 0:
+            corrupted_files.append(img_path)
+        else:
+            valid_files.append(img_path)
+
+    print(f"   ✅ Fichiers valides: {len(valid_files)}")
+    if missing_files:
+        print(f"   ⚠️  Fichiers manquants: {len(missing_files)}")
+        print(f"      Exemples: {missing_files[:3]}")
+    if corrupted_files:
+        print(f"   ⚠️  Fichiers corrompus (taille 0): {len(corrupted_files)}")
+        print(f"      Exemples: {corrupted_files[:3]}")
+
+    # Filtrer à nouveau pour être sûr (au cas où)
+    if missing_files or corrupted_files:
+        print(f"\n🔧 Nettoyage des fichiers invalides...")
+        dataset.df = dataset.df[dataset.df['image_path'].isin(valid_files)]
+        print(f"   Dataset final: {len(dataset.df)} images")
 
     # Utiliser toutes les données comme test (pas de split)
     _, _, test_df = dataset.split_data(
@@ -378,6 +445,24 @@ def main():
     _, _, test_gen = dataset.create_generators(
         batch_size=args.batch_size, augment=False
     )
+
+    # Vérifier la cohérence générateur / DataFrame
+    print(f"\n🔍 Vérification cohérence générateur/DataFrame:")
+    print(f"   Test DataFrame: {len(test_df)} échantillons")
+    print(f"   Test Generator: {test_gen.n} échantillons")
+    print(f"   Batch size: {test_gen.batch_size}")
+    print(f"   Nombre de batches: {len(test_gen)}")
+
+    if len(test_df) != test_gen.n:
+        raise ValueError(
+            f"❌ Incohérence détectée!\n"
+            f"   DataFrame: {len(test_df)} échantillons\n"
+            f"   Generator: {test_gen.n} échantillons\n"
+            f"   Ces deux nombres doivent être identiques!"
+        )
+
+    print(f"   ✅ Cohérence OK: {len(test_df)} échantillons")
+
 
     # Évaluation
     print("\n🔎 Évaluation du modèle sur le jeu de test...")
