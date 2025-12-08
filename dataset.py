@@ -33,7 +33,18 @@ class AIROGSDataset:
                 df["image_path"] = df["challenge_id"].apply(
                     lambda x: os.path.join(img_dir, f"{x}.jpg")
                 )
-                dfs.append(df)
+                # Filter only existing images
+                df = df[df['image_path'].apply(os.path.exists)]
+
+                if len(df) > 0:
+                    print(f"\n   Dataset: {img_dir}")
+                    print(f"      Images: {len(df)}")
+                    print(f"      RG: {(df['label'] == 1).sum()}")
+                    print(f"      NRG: {(df['label'] == 0).sum()}")
+                    dfs.append(df)
+                else:
+                    print(f"\n   ⚠️  Warning: No images found in {img_dir}")
+
             self.df = pd.concat(dfs, ignore_index=True)
         else:
             self.df = pd.read_csv(self.labels_csv)
@@ -46,14 +57,19 @@ class AIROGSDataset:
                 lambda x: os.path.join(self.images_dir, f"{x}.jpg")
             )
 
-        # Check for missing files (optional, can be slow)
-        # self.df = self.df[self.df['image_path'].apply(os.path.exists)]
+        # Always filter for existing images
+        initial_count = len(self.df)
+        self.df = self.df[self.df['image_path'].apply(os.path.exists)]
+        filtered_count = initial_count - len(self.df)
 
-        print(f"Total images: {len(self.df)}")
-        print(f"RG (Glaucoma): {(self.df['label'] == 1).sum()}")
-        print(f"NRG (No Glaucoma): {(self.df['label'] == 0).sum()}")
+        if filtered_count > 0:
+            print(f"\n⚠️  Filtered out {filtered_count} images that don't exist on disk")
+
+        print(f"\n✅ Total images loaded: {len(self.df)}")
+        print(f"   RG (Glaucoma): {(self.df['label'] == 1).sum()}")
+        print(f"   NRG (No Glaucoma): {(self.df['label'] == 0).sum()}")
         print(
-            f"Class imbalance ratio: 1:{(self.df['label'] == 0).sum() / (self.df['label'] == 1).sum():.1f}"
+            f"   Class imbalance ratio: 1:{(self.df['label'] == 0).sum() / (self.df['label'] == 1).sum():.1f}"
         )
 
         return self.df

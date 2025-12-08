@@ -6,7 +6,12 @@ import os
 
 # Paths
 DATA_DIR = "./dataset/"
-TRAIN_IMAGES_DIR = [os.path.join(DATA_DIR, "0"), os.path.join(DATA_DIR, "2"), os.path.join(DATA_DIR, "3"), os.path.join(DATA_DIR, "1")]
+# Use datasets 0, 1, and 4 for training
+TRAIN_IMAGES_DIR = [
+    os.path.join(DATA_DIR, "0"),
+    os.path.join(DATA_DIR, "1"),
+    os.path.join(DATA_DIR, "4")
+]
 TRAIN_LABELS_CSV = os.path.join(DATA_DIR, "train_labels.csv")
 OUTPUT_DIR = "./outputs"
 MODELS_DIR = os.path.join(OUTPUT_DIR, "models")
@@ -20,10 +25,11 @@ LEARNING_RATE = 1e-4
 MODEL_BACKBONE = "efficientnet-b0"  # Options: "efficientnet-b0", "resnet50"
 
 # Class imbalance handling
-# RG: 3270, NRG: 98172 -> imbalance ratio ~1:30
+# For datasets 0, 1, 4: typical imbalance ratio ~1:30
+# Using sqrt of ratio to avoid overfitting: sqrt(30) ≈ 5.5
 CLASS_WEIGHTS = {
     0: 1.0,  # NRG (No Referable Glaucoma)
-    1: 30.0,  # RG (Referable Glaucoma)
+    1: 10.0,  # RG (Referable Glaucoma) - reduced from 30 to avoid overfitting
 }
 
 # Data split
@@ -32,15 +38,15 @@ VAL_SPLIT = 0.2
 TEST_SPLIT = 0.0  # No separate test set in this baseline
 RANDOM_SEED = 42
 
-# Augmentation parameters
+# Augmentation parameters (DISABLED for this training)
 AUGMENTATION = {
-    "horizontal_flip": True,
+    "horizontal_flip": False,
     "vertical_flip": False,
-    "rotation_range": 15,
-    "width_shift_range": 0.1,
-    "height_shift_range": 0.1,
-    "zoom_range": 0.1,
-    "brightness_range": [0.8, 1.2],
+    "rotation_range": 0,
+    "width_shift_range": 0.0,
+    "height_shift_range": 0.0,
+    "zoom_range": 0.0,
+    "brightness_range": None,
 }
 
 # Training parameters

@@ -77,8 +77,14 @@ def train_model(args):
     print("AIROGS GLAUCOMA DETECTION - BASELINE TRAINING")
     print("=" * 60)
     print(f"Start time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"Model: {config.MODEL_BACKBONE}")
-    print(f"Image size: {config.IMAGE_SIZE}x{config.IMAGE_SIZE}")
+    print(f"\n📋 Configuration:")
+    print(f"   Model: {config.MODEL_BACKBONE}")
+    print(f"   Image size: {config.IMAGE_SIZE}x{config.IMAGE_SIZE}")
+    print(f"   Batch size: {config.BATCH_SIZE}")
+    print(f"   Epochs: {config.EPOCHS}")
+    print(f"   Learning rate: {config.LEARNING_RATE}")
+    print(f"   Class weights: {config.CLASS_WEIGHTS}")
+    print(f"   Data augmentation: DISABLED")
     print(f"Batch size: {config.BATCH_SIZE}")
     print(f"Epochs: {config.EPOCHS}")
     print(f"Learning rate: {config.LEARNING_RATE}")
@@ -94,9 +100,23 @@ def train_model(args):
 
     # Load and prepare data
     print("\n📊 Loading dataset...")
+
+    # Use multiple dataset directories
+    dataset_dirs = [
+        "dataset/0",
+        "dataset/1",
+        "dataset/4"
+    ]
+
+    print(f"📁 Using {len(dataset_dirs)} dataset directories:")
+    for d in dataset_dirs:
+        print(f"   - {d}")
+
     dataset = AIROGSDataset(
-        labels_csv=config.TRAIN_LABELS_CSV, images_dir=config.TRAIN_IMAGES_DIR
+        labels_csv=config.TRAIN_LABELS_CSV, images_dir=dataset_dirs
     )
+
+    dataset.load_data()
 
     train_df, val_df, test_df = dataset.split_data(
         train_split=config.TRAIN_SPLIT,
@@ -108,7 +128,7 @@ def train_model(args):
     # Create data generators
     print("\n🔄 Creating data generators...")
     train_gen, val_gen, test_gen = dataset.create_generators(
-        batch_size=config.BATCH_SIZE, augment=True
+        batch_size=config.BATCH_SIZE, augment=False
     )
 
     # Calculate steps per epoch
