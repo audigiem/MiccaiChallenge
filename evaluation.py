@@ -134,7 +134,8 @@ def evaluate_model(model, test_generator, test_df):
 
     # Handle NaN values
     if np.isnan(y_pred_proba).any():
-        print(f"\n⚠️  WARNING: Found {np.isnan(y_pred_proba).sum()} NaN values in predictions!")
+        nan_count = np.isnan(y_pred_proba).sum()
+        print(f"\n⚠️  WARNING: Found {nan_count} NaN values in predictions ({100*nan_count/len(y_pred_proba):.2f}%)!")
         print(f"   This usually means:")
         print(f"   1. Model encountered invalid images")
         print(f"   2. Generator and DataFrame are out of sync")
@@ -144,8 +145,30 @@ def evaluate_model(model, test_generator, test_df):
         nan_indices = np.where(np.isnan(y_pred_proba))[0]
         print(f"\n   NaN at indices: {nan_indices[:10]}..." if len(nan_indices) > 10 else f"\n   NaN at indices: {nan_indices}")
 
+        # Check if ALL non-NaN predictions are also 0.0
+        non_nan_preds = y_pred_proba[~np.isnan(y_pred_proba)]
+        if len(non_nan_preds) > 0:
+            unique_values = np.unique(non_nan_preds)
+            print(f"\n   📊 Non-NaN predictions:")
+            print(f"      Count: {len(non_nan_preds)}")
+            print(f"      Unique values: {len(unique_values)}")
+            if len(unique_values) <= 10:
+                print(f"      Values: {unique_values}")
+            else:
+                print(f"      Sample values: {unique_values[:10]}")
+
+            if len(unique_values) == 1 and unique_values[0] == 0.0:
+                print(f"\n   🔴 CRITIQUE: Toutes les prédictions non-NaN sont exactement 0.0!")
+                print(f"   Cela indique que le modèle n'a pas été entraîné correctement.")
+                print(f"\n   💡 ACTIONS RECOMMANDÉES:")
+                print(f"      1. Vérifiez que le fichier de modèle est complet:")
+                print(f"         ls -lh {test_df.iloc[0]['image_path'].rsplit('/', 2)[0]}/../outputs/models/")
+                print(f"      2. Exécutez: python3 inspect_model.py <model_path>")
+                print(f"      3. Vérifiez les logs d'entraînement")
+                print(f"      4. Si nécessaire, ré-entraînez le modèle")
+
         raise ValueError(
-            f"Predictions contain {np.isnan(y_pred_proba).sum()} NaN values. "
+            f"Predictions contain {nan_count} NaN values. "
             "Cannot compute metrics."
         )
 
