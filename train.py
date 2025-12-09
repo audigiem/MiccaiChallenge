@@ -97,15 +97,18 @@ def train_model(args):
     print("\n📊 Loading dataset...")
 
     # Use multiple dataset directories
-    dataset_dirs = [
-        "dataset/0",
-        "dataset/1",
-        "dataset/4"
-    ]
+    # dataset_dirs = [
+    #     "dataset/0",
+    #     "dataset/1",
+    #     "dataset/4"
+    # ]
+    #
+    # print(f"📁 Using {len(dataset_dirs)} dataset directories:")
+    # for d in dataset_dirs:
+    #     print(f"   - {d}")
 
-    print(f"📁 Using {len(dataset_dirs)} dataset directories:")
-    for d in dataset_dirs:
-        print(f"   - {d}")
+    dataset_dirs = config.TRAIN_IMAGES_DIR
+
 
     dataset = AIROGSDataset(
         labels_csv=config.TRAIN_LABELS_CSV, images_dir=dataset_dirs
@@ -122,8 +125,11 @@ def train_model(args):
 
     # Create data generators
     print("\n🔄 Creating data generators...")
+    # Enable augmentation based on config
+    use_augmentation = any(config.AUGMENTATION.values())
+    print(f"Data augmentation: {'ENABLED' if use_augmentation else 'DISABLED'}")
     train_gen, val_gen, test_gen = dataset.create_generators(
-        batch_size=config.BATCH_SIZE, augment=False
+        batch_size=config.BATCH_SIZE, augment=use_augmentation
     )
 
     # Calculate steps per epoch

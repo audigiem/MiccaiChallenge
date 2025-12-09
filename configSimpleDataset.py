@@ -83,7 +83,10 @@ def main(selected=(0, 1, 4), out_dir="dataset/simple", seed=42, copy_images=True
             dst = images_out / f"{i}_{dst_name}"
         if copy_images:
             shutil.copy2(src, dst)
-        out_records.append({"image": str(Path("images") / dst.name), "label": int(row["label"])})
+        # write challenge_id (sans extension) and textual class RG/NRG
+        challenge_id = Path(dst.name).stem
+        class_text = "RG" if int(row["label"]) == 1 else "NRG"
+        out_records.append({"challenge_id": challenge_id, "class": class_text})
 
     out_csv = out_dir / "train_labels_simple.csv"
     pd.DataFrame(out_records).to_csv(out_csv, index=False)

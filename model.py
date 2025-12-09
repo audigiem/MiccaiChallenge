@@ -3,7 +3,7 @@ Model architecture for AIROGS glaucoma detection
 """
 
 import tensorflow as tf
-from tensorflow.keras import layers, models
+from tensorflow.keras import layers, models, regularizers
 from tensorflow.keras.applications import EfficientNetB0, ResNet50, EfficientNetB3
 import config
 import os
@@ -58,12 +58,12 @@ def create_baseline_model(
     # Backbone
     x = base_model(inputs, training=False)
 
-    # Classification head
-    x = layers.Dropout(0.3)(x)
-    x = layers.Dense(256, activation="relu")(x)
-    x = layers.Dropout(0.3)(x)
-    x = layers.Dense(128, activation="relu")(x)
-    x = layers.Dropout(0.2)(x)
+    # Classification head with stronger regularization
+    x = layers.Dropout(0.5)(x)  # Increased from 0.3
+    x = layers.Dense(256, activation="relu", kernel_regularizer=regularizers.l2(0.001))(x)
+    x = layers.Dropout(0.5)(x)  # Increased from 0.3
+    x = layers.Dense(128, activation="relu", kernel_regularizer=regularizers.l2(0.001))(x)
+    x = layers.Dropout(0.4)(x)  # Increased from 0.2
 
     # Output layer (sigmoid for binary classification)
     outputs = layers.Dense(num_classes, activation="sigmoid", name="glaucoma_output")(x)
@@ -194,29 +194,30 @@ def get_callbacks(model_name="model", patience=5):
     os.makedirs(config.LOGS_DIR, exist_ok=True)
 
     callbacks = [
-        # Model checkpoint - save best model
+        # Model checkpoint - save best model based on val_auc
         tf.keras.callbacks.ModelCheckpoint(
             filepath=os.path.join(config.MODELS_DIR, f"{model_name}_best.keras"),
-            monitor="val_loss",
-            mode="min",
+            monitor="val_auc",
+            mode="max",  # Maximize AUC
             save_best_only=True,
             save_weights_only=False,
             verbose=1,
         ),
-        # Early stopping
+        # Early stopping based on val_auc
         tf.keras.callbacks.EarlyStopping(
-            monitor="val_loss",
-            mode="max",
+            monitor="val_auc",
+            mode="max",  # Maximize AUC
             patience=patience,
             restore_best_weights=True,
             verbose=1,
         ),
         # Reduce learning rate on plateau
         tf.keras.callbacks.ReduceLROnPlateau(
-            monitor="val_loss",
+            monitor="val_auc",
+            mode="max",  # Maximize AUC
             factor=config.REDUCE_LR_FACTOR,
             patience=config.REDUCE_LR_PATIENCE,
-            min_lr=1e-7,
+            min_lr=config.MIN_LR,
             verbose=1,
         ),
         # TensorBoard logging

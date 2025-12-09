@@ -20,16 +20,16 @@ LOGS_DIR = os.path.join(OUTPUT_DIR, "logs")
 # Model parameters
 IMAGE_SIZE = 384  # Resize images to 384x384 for faster training
 BATCH_SIZE = 32
-EPOCHS = 20
-LEARNING_RATE = 1e-4
+EPOCHS = 30
+LEARNING_RATE = 5e-5  # Reduced from 1e-4 to prevent overfitting
 MODEL_BACKBONE = "efficientnet-b0"  # Options: "efficientnet-b0", "resnet50"
 
 # Class imbalance handling
 # For datasets 0, 1, 4: typical imbalance ratio ~1:30
-# Using sqrt of ratio to avoid overfitting: sqrt(30) ≈ 5.5
+# Using moderate weight to avoid extreme overfitting on minority class
 CLASS_WEIGHTS = {
     0: 1.0,  # NRG (No Referable Glaucoma)
-    1: 10.0,  # RG (Referable Glaucoma) - reduced from 30 to avoid overfitting
+    1: 5.0,  # RG (Referable Glaucoma) - reduced from 10 to prevent overfitting
 }
 
 # Data split
@@ -38,21 +38,22 @@ VAL_SPLIT = 0.199
 TEST_SPLIT = 0.001  # No separate test set in this baseline
 RANDOM_SEED = 42
 
-# Augmentation parameters (DISABLED for this training)
+# Augmentation parameters (RE-ENABLED to prevent overfitting)
 AUGMENTATION = {
-    "horizontal_flip": False,
-    "vertical_flip": False,
-    "rotation_range": 0,
-    "width_shift_range": 0.0,
-    "height_shift_range": 0.0,
-    "zoom_range": 0.0,
-    "brightness_range": None,
+    "horizontal_flip": True,
+    "vertical_flip": True,  # Images can be rotated
+    "rotation_range": 15,
+    "width_shift_range": 0.1,
+    "height_shift_range": 0.1,
+    "zoom_range": 0.1,
+    "brightness_range": [0.8, 1.2],
 }
 
 # Training parameters
-EARLY_STOPPING_PATIENCE = 5
-REDUCE_LR_PATIENCE = 3
+EARLY_STOPPING_PATIENCE = 8  # Increased to allow more exploration
+REDUCE_LR_PATIENCE = 4  # Increased from 3
 REDUCE_LR_FACTOR = 0.5
+MIN_LR = 1e-7  # Minimum learning rate
 
 # Evaluation
 SPECIFICITY_THRESHOLD = 0.95  # For sensitivity @ 95% specificity
