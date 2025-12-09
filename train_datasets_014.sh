@@ -2,10 +2,10 @@
 #SBATCH --job-name=airogs_train_014
 #SBATCH --output=train_run/output/airogs_train_014_%j.out
 #SBATCH --error=train_run/stderr/airogs_train_014_%j.err
-#SBATCH --time=08:00:00
+#SBATCH --time=20:00:00
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
-#SBATCH --partition=v100
+#SBATCH --partition=rtx6000
 #SBATCH --gres=gpu:1
 
 # Training script for datasets 0, 1, and 4 (no augmentation)
@@ -22,7 +22,7 @@ echo ""
 # Configuration
 MEMORY="32G"
 CPUS="8"
-TIME_LIMIT="08:00:00"
+TIME_LIMIT="20:00:00"
 # Try multiple possible venv paths
 if [ -f "$HOME/MiccaiChallenge/bin/activate" ]; then
     ENV_PATH="$HOME/MiccaiChallenge/bin/activate"
