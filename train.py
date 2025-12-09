@@ -171,8 +171,8 @@ def train_model(args):
     )
 
     # Save final model
-    final_model_path = os.path.join(config.MODELS_DIR, f"{model_name}_final.h5")
-    model.save(final_model_path)
+    final_model_path = os.path.join(config.MODELS_DIR, f"{model_name}_final.keras")
+    model.save(final_model_path, save_format="keras")
     print(f"\n✅ Final model saved to: {final_model_path}")
 
     # Save training history

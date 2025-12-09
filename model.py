@@ -6,7 +6,7 @@ import tensorflow as tf
 from tensorflow.keras import layers, models
 from tensorflow.keras.applications import EfficientNetB0, ResNet50, EfficientNetB3
 import config
-
+import os
 
 def create_baseline_model(
     backbone="efficientnet-b0", input_shape=(384, 384, 3), num_classes=1
@@ -189,8 +189,6 @@ def get_callbacks(model_name="model", patience=5):
     Returns:
         List of callbacks
     """
-    import os
-
     # Create directories
     os.makedirs(config.MODELS_DIR, exist_ok=True)
     os.makedirs(config.LOGS_DIR, exist_ok=True)
@@ -198,15 +196,16 @@ def get_callbacks(model_name="model", patience=5):
     callbacks = [
         # Model checkpoint - save best model
         tf.keras.callbacks.ModelCheckpoint(
-            filepath=os.path.join(config.MODELS_DIR, f"{model_name}_best.h5"),
-            monitor="val_auc",
-            mode="max",
+            filepath=os.path.join(config.MODELS_DIR, f"{model_name}_best.keras"),
+            monitor="val_loss",
+            mode="min",
             save_best_only=True,
+            save_weights_only=False,
             verbose=1,
         ),
         # Early stopping
         tf.keras.callbacks.EarlyStopping(
-            monitor="val_auc",
+            monitor="val_loss",
             mode="max",
             patience=patience,
             restore_best_weights=True,

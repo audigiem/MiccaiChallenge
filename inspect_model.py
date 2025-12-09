@@ -21,14 +21,43 @@ def inspect_model(model_path):
     file_size = os.path.getsize(model_path) / (1024 * 1024)
     print(f"   Taille: {file_size:.2f} MB")
 
-    # 2. Charger le modèle
     print("\n📥 Chargement du modèle...")
     try:
         model = keras.models.load_model(model_path, compile=False)
         print("   ✅ Modèle chargé avec succès")
     except Exception as e:
         print(f"   ❌ Erreur lors du chargement: {e}")
-        return False
+        print("   ⚙️  Tentative de chargement alternatif depuis le fichier HDF5...")
+
+        try:
+            import h5py
+            import json
+
+            with h5py.File(model_path, 'r') as f:
+                # Cas classique: Keras HDF5 stocke la config sous l'attribut 'model_config'
+                if 'model_config' in f.attrs:
+                    raw = f.attrs['model_config']
+                    if isinstance(raw, bytes):
+                        raw = raw.decode('utf-8')
+                    model_config = json.loads(raw)
+                    model = keras.models.model_from_config(model_config, custom_objects=None)
+                    # Charger les poids depuis le fichier HDF5
+                    model.load_weights(model_path)
+                    print("   ✅ Modèle reconstruit depuis `model_config` et poids chargés")
+                else:
+                    raise RuntimeError("`model_config` introuvable dans le fichier HDF5.")
+
+        except Exception as e2:
+            print(f"   ❌ Échec du chargement alternatif: {e2}")
+            print("   🔎 Diagnostics rapides:")
+            print(
+                "     - Vérifier que la version de TensorFlow/Keras utilisée pour l'inspection est la même que celle utilisée pour l'entraînement.")
+            print(
+                "     - Si le modèle contient des custom layers/activations, passez-les via `custom_objects` à `load_model`.")
+            print("     - Exemple: keras.models.load_model(path, custom_objects={'MaLayer': MaLayer})")
+            print(
+                "     - Si rien ne marche, extraire les poids (h5py) et reconstruire manuellement l'architecture avant d'appeler `load_weights`.")
+            return False
 
     # 3. Architecture
     print("\n🏗️  Architecture:")

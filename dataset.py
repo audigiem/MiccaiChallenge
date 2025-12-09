@@ -28,7 +28,20 @@ class AIROGSDataset:
         if isinstance(self.images_dir, list):
             dfs = []
             for img_dir in self.images_dir:
-                df = pd.read_csv(self.labels_csv)
+                # Extract dataset number from path (e.g., "dataset/0" -> "0")
+                dataset_num = os.path.basename(img_dir)
+
+                # Try to use specific labels file first (e.g., train_labels_0.csv)
+                specific_labels = os.path.join(os.path.dirname(self.labels_csv), f"train_labels_{dataset_num}.csv")
+
+                if os.path.exists(specific_labels):
+                    labels_file = specific_labels
+                    print(f"\n   📋 Using specific labels: {os.path.basename(specific_labels)}")
+                else:
+                    labels_file = self.labels_csv
+                    print(f"\n   📋 Using global labels: {os.path.basename(labels_file)} (filtering for {img_dir})")
+
+                df = pd.read_csv(labels_file)
                 df["label"] = (df["class"] == "RG").astype(int)
                 df["image_path"] = df["challenge_id"].apply(
                     lambda x: os.path.join(img_dir, f"{x}.jpg")
@@ -37,13 +50,13 @@ class AIROGSDataset:
                 df = df[df['image_path'].apply(os.path.exists)]
 
                 if len(df) > 0:
-                    print(f"\n   Dataset: {img_dir}")
+                    print(f"   Dataset: {img_dir}")
                     print(f"      Images: {len(df)}")
                     print(f"      RG: {(df['label'] == 1).sum()}")
                     print(f"      NRG: {(df['label'] == 0).sum()}")
                     dfs.append(df)
                 else:
-                    print(f"\n   ⚠️  Warning: No images found in {img_dir}")
+                    print(f"   ⚠️  Warning: No images found in {img_dir}")
 
             self.df = pd.concat(dfs, ignore_index=True)
         else:
