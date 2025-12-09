@@ -4,9 +4,9 @@
 # Usage: ./training_augmentedUNet.sh [--time=20:00:00] [--mem=8GB] [--cpus=12]
 
 # Default values
-MEMORY="4GB"
+MEMORY="16GB"
 CPUS="8"
-TIME_LIMIT="4:00:00"
+TIME_LIMIT="8:00:00"
 SCRIPT_NAME="train.py"
 ENV_PATH="~/MiccaiChallenge/bin/activate"
 JOB_NAME="baseline_training"
@@ -50,7 +50,7 @@ cat > "$SLURM_SCRIPT" << EOF
 #SBATCH --time=${TIME_LIMIT}
 #SBATCH --cpus-per-task=${CPUS}
 #SBATCH --mem=${MEMORY}
-#SBATCH --partition=a40
+#SBATCH --partition=rtx6000
 #SBATCH --gres=gpu:1
 
 # Log job start

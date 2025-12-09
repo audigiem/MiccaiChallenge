@@ -4,9 +4,9 @@
 # Usage: ./submit_eval.sh [--model=path] [--data=path] [--time=02:00:00] [--mem=16G] [--cpus=4]
 
 # Default values
-MODEL_PATH="outputs/models/airogs_baseline_efficientnet-b0_20251202_132402_final.h5"
-DATA_DIR="dataset/1"
-LABELS_CSV="dataset/train_labels.csv"
+MODEL_PATH="outputs/models/airogs_baseline_efficientnet-b0_20251208_183943_best.h5"
+DATA_DIR="dataset/5"
+LABELS_CSV="dataset/train_labels_5.csv"
 BATCH_SIZE=32
 OUTPUT_DIR="evaluation_results"
 MEMORY="16G"
