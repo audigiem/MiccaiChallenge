@@ -7,6 +7,8 @@
 
 # Default values
 MODEL_PATH=""
+DATA_DIR="dataset/5"
+LABELS_CSV="dataset/train_labels_5.csv"
 USE_TTA="--tta"
 USE_CLAHE=""
 MEMORY="24G"
@@ -20,6 +22,14 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         --model=*)
             MODEL_PATH="${1#*=}"
+            shift
+            ;;
+        --data=*)
+            DATA_DIR="${1#*=}"
+            shift
+            ;;
+        --labels=*)
+            LABELS_CSV="${1#*=}"
             shift
             ;;
         --tta)
@@ -48,7 +58,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         *)
             echo "Unknown option: $1"
-            echo "Usage: $0 [--model=path] [--tta|--no-tta] [--clahe] [--time=HH:MM:SS] [--mem=XG] [--cpus=N]"
+            echo "Usage: $0 [--model=path] [--data=path] [--labels=path] [--tta|--no-tta] [--clahe] [--time=HH:MM:SS] [--mem=XG] [--cpus=N]"
             exit 1
             ;;
     esac
@@ -98,6 +108,8 @@ echo "============================================================"
 echo ""
 echo "📋 Configuration:"
 echo "   Model: $MODEL_PATH"
+echo "   Data directory: $DATA_DIR"
+echo "   Labels CSV: $LABELS_CSV"
 echo "   Test-Time Augmentation: ${USE_TTA:+ENABLED}"
 echo "   CLAHE Preprocessing: ${USE_CLAHE:+ENABLED}"
 echo "   GPU: 1x NVIDIA RTX 6000 (24GB VRAM)"
@@ -177,12 +189,19 @@ echo "=============================================="
 echo "Starting Improved Evaluation"
 echo "=============================================="
 echo "Model: ${MODEL_PATH}"
+echo "Data directory: ${DATA_DIR}"
+echo "Labels CSV: ${LABELS_CSV}"
 echo "TTA: ${USE_TTA:+ENABLED}"
 echo "CLAHE: ${USE_CLAHE:+ENABLED}"
 echo ""
 
 # Run evaluation
-python3 evaluation_improved.py ${MODEL_PATH} ${USE_TTA} ${USE_CLAHE}
+python3 evaluation_improved.py \
+    --model-path="${MODEL_PATH}" \
+    --data-dir="${DATA_DIR}" \
+    --labels-csv="${LABELS_CSV}" \
+    ${USE_TTA} \
+    ${USE_CLAHE}
 
 PYTHON_EXIT_CODE=\$?
 

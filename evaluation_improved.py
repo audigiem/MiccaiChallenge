@@ -22,12 +22,14 @@ from improvements_week2 import (
 )
 
 
-def evaluate_with_improvements(model_path, use_tta=True, use_clahe=False):
+def evaluate_with_improvements(model_path, data_dir, labels_csv, use_tta=True, use_clahe=False):
     """
     Evaluate model with Week 2 improvements.
     
     Args:
         model_path: Path to trained model
+        data_dir: Directory containing test images
+        labels_csv: Path to labels CSV file
         use_tta: Whether to use test-time augmentation
         use_clahe: Whether to apply CLAHE preprocessing
     """
@@ -35,6 +37,8 @@ def evaluate_with_improvements(model_path, use_tta=True, use_clahe=False):
     print("AIROGS EVALUATION - WITH WEEK 2 IMPROVEMENTS")
     print("=" * 70)
     print(f"Model: {model_path}")
+    print(f"Data directory: {data_dir}")
+    print(f"Labels CSV: {labels_csv}")
     print(f"Test-Time Augmentation: {'ENABLED' if use_tta else 'DISABLED'}")
     print(f"CLAHE Preprocessing: {'ENABLED' if use_clahe else 'DISABLED'}")
     print("=" * 70 + "\n")
@@ -47,10 +51,17 @@ def evaluate_with_improvements(model_path, use_tta=True, use_clahe=False):
     # Load test data
     print("📊 Loading test dataset...")
     dataset = AIROGSDataset(
-        labels_csv=config.TRAIN_LABELS_CSV,
-        images_dir=config.TRAIN_IMAGES_DIR
+        labels_csv=labels_csv,
+        images_dir=data_dir
     )
     dataset.load_data()
+    
+    # Filter to only existing images (same as baseline evaluation)
+    dataset.df = dataset.df[dataset.df['image_path'].apply(os.path.exists)]
+    print(f"✅ Valid images found: {len(dataset.df)}")
+    
+    if len(dataset.df) == 0:
+        raise ValueError(f"No valid images found in {data_dir}")
     
     # Use all data as test (same as baseline evaluation)
     _, _, test_df = dataset.split_data(
@@ -198,10 +209,18 @@ if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser(description="Evaluate model with Week 2 improvements")
-    parser.add_argument("model_path", type=str, help="Path to trained model (.keras)")
+    parser.add_argument("--model-path", type=str, required=True, help="Path to trained model (.keras)")
+    parser.add_argument("--data-dir", type=str, required=True, help="Directory containing test images")
+    parser.add_argument("--labels-csv", type=str, required=True, help="Path to labels CSV file")
     parser.add_argument("--tta", action="store_true", help="Use test-time augmentation")
     parser.add_argument("--clahe", action="store_true", help="Use CLAHE preprocessing")
     
     args = parser.parse_args()
     
-    evaluate_with_improvements(args.model_path, use_tta=args.tta, use_clahe=args.clahe)
+    evaluate_with_improvements(
+        args.model_path,
+        args.data_dir,
+        args.labels_csv,
+        use_tta=args.tta,
+        use_clahe=args.clahe
+    )
