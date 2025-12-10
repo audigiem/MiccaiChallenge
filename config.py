@@ -60,4 +60,4 @@ SPECIFICITY_THRESHOLD = 0.95  # For sensitivity @ 95% specificity
 PAUC_RANGE = (0.9, 1.0)  # Partial AUC range (90-100% specificity)
 
 # GPU settings
-USE_MIXED_PRECISION = False  # Disabled due to cuDNN issues with V100
+USE_MIXED_PRECISION = True  # Disabled due to cuDNN issues with V100
