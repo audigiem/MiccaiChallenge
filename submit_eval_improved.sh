@@ -180,7 +180,8 @@ echo ""
 echo "Activating virtual environment..."
 source ${ENV_PATH}
 export OMP_NUM_THREADS=${CPUS}
-export TF_CPP_MIN_LOG_LEVEL=1
+export TF_CPP_MIN_LOG_LEVEL=0
+export PYTHONUNBUFFERED=1
 
 # Set GPU affinity for RTX 6000
 export CUDA_VISIBLE_DEVICES=0
@@ -195,8 +196,8 @@ echo "TTA: ${USE_TTA:+ENABLED}"
 echo "CLAHE: ${USE_CLAHE:+ENABLED}"
 echo ""
 
-# Run evaluation
-python3 evaluation_improved.py \
+# Run evaluation with unbuffered output
+python3 -u evaluation_improved.py \
     --model-path="${MODEL_PATH}" \
     --data-dir="${DATA_DIR}" \
     --labels-csv="${LABELS_CSV}" \

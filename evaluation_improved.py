@@ -42,14 +42,18 @@ def evaluate_with_improvements(model_path, data_dir, labels_csv, use_tta=True, u
     print(f"Test-Time Augmentation: {'ENABLED' if use_tta else 'DISABLED'}")
     print(f"CLAHE Preprocessing: {'ENABLED' if use_clahe else 'DISABLED'}")
     print("=" * 70 + "\n")
+    sys.stdout.flush()
     
     # Load model
     print("📦 Loading model...")
+    sys.stdout.flush()
     model = tf.keras.models.load_model(model_path, compile=False)
     print("✅ Model loaded successfully\n")
+    sys.stdout.flush()
     
     # Load test data
     print("📊 Loading test dataset...")
+    sys.stdout.flush()
     dataset = AIROGSDataset(
         labels_csv=labels_csv,
         images_dir=data_dir
@@ -57,13 +61,18 @@ def evaluate_with_improvements(model_path, data_dir, labels_csv, use_tta=True, u
     dataset.load_data()
     
     # Filter to only existing images (same as baseline evaluation)
+    print(f"   Filtering valid images...")
+    sys.stdout.flush()
     dataset.df = dataset.df[dataset.df['image_path'].apply(os.path.exists)]
     print(f"✅ Valid images found: {len(dataset.df)}")
+    sys.stdout.flush()
     
     if len(dataset.df) == 0:
         raise ValueError(f"No valid images found in {data_dir}")
     
     # Use all data as test (same as baseline evaluation)
+    print("   Splitting dataset (all as test)...")
+    sys.stdout.flush()
     _, _, test_df = dataset.split_data(
         train_split=0.0,
         val_split=0.0,
@@ -72,9 +81,11 @@ def evaluate_with_improvements(model_path, data_dir, labels_csv, use_tta=True, u
     )
     
     print(f"Test set size: {len(test_df)} images\n")
+    sys.stdout.flush()
     
     # Make predictions
     print("🔮 Making predictions...")
+    sys.stdout.flush()
     y_true = test_df["label"].values
     y_pred_proba = []
     
@@ -83,6 +94,7 @@ def evaluate_with_improvements(model_path, data_dir, labels_csv, use_tta=True, u
     for idx, row in test_df.iterrows():
         if idx % 100 == 0:
             print(f"  Processing image {idx + 1}/{len(test_df)}...")
+            sys.stdout.flush()
         
         # Load image
         img = load_img(row["image_path"], target_size=(config.IMAGE_SIZE, config.IMAGE_SIZE))
