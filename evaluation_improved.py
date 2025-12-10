@@ -52,11 +52,11 @@ def evaluate_with_improvements(model_path, use_tta=True, use_clahe=False):
     )
     dataset.load_data()
     
-    # Use the same split as training to get test set
+    # Use all data as test (same as baseline evaluation)
     _, _, test_df = dataset.split_data(
-        train_split=config.TRAIN_SPLIT,
-        val_split=config.VAL_SPLIT,
-        test_split=config.TEST_SPLIT,
+        train_split=0.0,
+        val_split=0.0,
+        test_split=1.0,
         random_seed=config.RANDOM_SEED
     )
     

@@ -55,11 +55,11 @@ echo "   Datasets: 0, 1, 4"
 echo "   🆕 Focal Loss: ENABLED (γ=2.0)"
 echo "   🆕 CLAHE Preprocessing: ENABLED"
 echo "   🆕 Enhanced Augmentation: ENABLED"
-echo "   Batch size: 32"
+echo "   Batch size: 16 (optimized for RTX 6000)"
 echo "   Epochs: 30"
 echo "   Image size: 384x384"
-echo "   GPU: 1x NVIDIA A40 (46GB VRAM)"
-echo "   Partition: ampere"
+echo "   GPU: 1x NVIDIA RTX 6000 (24GB VRAM)"
+echo "   Partition: rtx6000"
 echo "   Memory: 32GB"
 echo "   CPUs: 8"
 echo "   Time limit: 12 hours"
@@ -87,7 +87,7 @@ cat > "$SLURM_SCRIPT" << 'EOFSLURM'
 #SBATCH --time=12:00:00
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
-#SBATCH --partition=a40
+#SBATCH --partition=rtx6000
 #SBATCH --gres=gpu:1
 
 echo "=============================================="
@@ -102,7 +102,7 @@ echo "Configuration:"
 echo "  Memory: 32G"
 echo "  CPUs: 8"
 echo "  Time limit: 12:00:00"
-echo "  GPU: 1x A40"
+echo "  GPU: 1x RTX 6000"
 echo ""
 
 # Load CUDA modules
@@ -128,7 +128,7 @@ source ~/MiccaiChallenge/bin/activate
 export OMP_NUM_THREADS=8
 export TF_CPP_MIN_LOG_LEVEL=1
 
-# Set GPU affinity for A40 (optimal for GPU0)
+# Set GPU affinity for RTX 6000
 export CUDA_VISIBLE_DEVICES=0
 
 echo "=============================================="

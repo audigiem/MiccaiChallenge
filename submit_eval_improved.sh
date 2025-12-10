@@ -100,8 +100,8 @@ echo "📋 Configuration:"
 echo "   Model: $MODEL_PATH"
 echo "   Test-Time Augmentation: ${USE_TTA:+ENABLED}"
 echo "   CLAHE Preprocessing: ${USE_CLAHE:+ENABLED}"
-echo "   GPU: 1x NVIDIA A40 (46GB VRAM)"
-echo "   Partition: a40"
+echo "   GPU: 1x NVIDIA RTX 6000 (24GB VRAM)"
+echo "   Partition: rtx6000"
 echo "   Memory: $MEMORY"
 echo "   CPUs: $CPUS"
 echo "   Time limit: $TIME_LIMIT"
@@ -129,7 +129,7 @@ cat > "$SLURM_SCRIPT" << EOFSLURM
 #SBATCH --time=${TIME_LIMIT}
 #SBATCH --cpus-per-task=${CPUS}
 #SBATCH --mem=${MEMORY}
-#SBATCH --partition=a40
+#SBATCH --partition=rtx6000
 #SBATCH --gres=gpu:1
 
 echo "=============================================="
@@ -144,7 +144,7 @@ echo "Configuration:"
 echo "  Memory: ${MEMORY}"
 echo "  CPUs: ${CPUS}"
 echo "  Time limit: ${TIME_LIMIT}"
-echo "  GPU: 1x A40"
+echo "  GPU: 1x RTX 6000"
 echo ""
 
 # Load CUDA modules
@@ -170,7 +170,7 @@ source ${ENV_PATH}
 export OMP_NUM_THREADS=${CPUS}
 export TF_CPP_MIN_LOG_LEVEL=1
 
-# Set GPU affinity for A40 (optimal for GPU0)
+# Set GPU affinity for RTX 6000
 export CUDA_VISIBLE_DEVICES=0
 
 echo "=============================================="
