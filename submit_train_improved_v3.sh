@@ -1,11 +1,11 @@
 #!/bin/bash
 #
-# Training script for Week 2 improvements (Focal Loss + CLAHE + Enhanced Augmentation)
-# Optimized for NVIDIA A40 GPUs (ampere partition)
+# Training script for Week 2 V3 - STABLE VERSION
+# Learning from V2 failures, back to proven methods
 #
 
 echo "============================================================"
-echo "AIROGS Week 2 Improved Training - Datasets 0, 1, 4"
+echo "AIROGS Week 2 Training V3 - STABLE & PROVEN"
 echo "============================================================"
 echo ""
 
@@ -50,23 +50,27 @@ echo "   ✅ Directories created"
 
 # Display configuration
 echo ""
-echo "📋 Week 2 Improved Configuration:"
+echo "📋 Week 2 V3 Configuration (STABLE & PROVEN):"
 echo "   Datasets: 0, 1, 4"
-echo "   🆕 Focal Loss: ENABLED (γ=2.0)"
-echo "   🆕 CLAHE Preprocessing: ENABLED"
-echo "   🆕 Enhanced Augmentation: ENABLED"
-echo "   Batch size: 16 (optimized for RTX 6000)"
-echo "   Epochs: 30"
+echo "   🔄 BACK TO: Weighted BCE (focal loss was unstable!)"
+echo "   ✅ KEEPING: CLAHE Preprocessing"
+echo "   ✅ KEEPING: Moderate Augmentation"
+echo "   Epochs: 20"
+echo "   Learning Rate: 5e-5 (baseline proven value)"
+echo "   Class weights: {0: 1.0, 1: 5.0}"
+echo "   Batch size: 32"
 echo "   Image size: 384x384"
 echo "   GPU: 1x NVIDIA RTX 6000 (24GB VRAM)"
 echo "   Partition: rtx6000"
 echo "   Memory: 32GB"
 echo "   CPUs: 8"
-echo "   Time limit: 12 hours"
+echo "   Time limit: 10 hours"
+echo ""
+echo "🎯 Goal: Match or beat baseline (pAUC: 0.4696, Sens@95%: 0.4833)"
 echo ""
 
 # Confirm
-read -p "Launch improved training? (y/n) " -n 1 -r
+read -p "Launch V3 stable training? (y/n) " -n 1 -r
 echo ""
 
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -76,14 +80,14 @@ fi
 
 # Create timestamp
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-SLURM_SCRIPT="train_run/slurm_train_improved_${TIMESTAMP}.sh"
+SLURM_SCRIPT="train_run/slurm_train_improved_v3_${TIMESTAMP}.sh"
 
 # Create SLURM batch script
 cat > "$SLURM_SCRIPT" << 'EOFSLURM'
 #!/bin/bash
-#SBATCH --job-name=airogs_improved
-#SBATCH --output=train_run/output/airogs_improved_%j.out
-#SBATCH --error=train_run/stderr/airogs_improved_%j.err
+#SBATCH --job-name=airogs_improved_v3
+#SBATCH --output=train_run/output/airogs_improved_v3_%j.out
+#SBATCH --error=train_run/stderr/airogs_improved_v3_%j.err
 #SBATCH --time=20:00:00
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
@@ -91,7 +95,7 @@ cat > "$SLURM_SCRIPT" << 'EOFSLURM'
 #SBATCH --gres=gpu:1
 
 echo "=============================================="
-echo "AIROGS Training - Week 2 Improvements"
+echo "AIROGS Training - Week 2 V3 STABLE"
 echo "=============================================="
 echo "Job ID: $SLURM_JOB_ID"
 echo "Node: $SLURM_NODELIST"
@@ -101,7 +105,7 @@ echo ""
 echo "Configuration:"
 echo "  Memory: 32G"
 echo "  CPUs: 8"
-echo "  Time limit: 12:00:00"
+echo "  Time limit: 10:00:00"
 echo "  GPU: 1x RTX 6000"
 echo ""
 
@@ -128,21 +132,23 @@ source ~/MiccaiChallenge/bin/activate
 export OMP_NUM_THREADS=8
 export TF_CPP_MIN_LOG_LEVEL=1
 
-# Set GPU affinity for RTX 6000
+# Set GPU affinity
 export CUDA_VISIBLE_DEVICES=0
 
 echo "=============================================="
-echo "Starting Week 2 Improved Training"
+echo "Starting Week 2 V3 Training (STABLE)"
 echo "=============================================="
-echo "Improvements:"
-echo "  - Focal Loss (γ=2.0, α=0.25)"
-echo "  - CLAHE preprocessing"
-echo "  - Enhanced augmentation"
+echo "V3 Strategy:"
+echo "  - Weighted BCE (proven stable)"
+echo "  - Conservative LR: 5e-5"
+echo "  - CLAHE preprocessing (keeping)"
+echo "  - Moderate augmentation"
+echo "  - 20 epochs"
 echo "  - Datasets: 0, 1, 4"
 echo ""
 
 # Run training
-python3 train_improved.py
+python3 train_improved_v3.py
 
 PYTHON_EXIT_CODE=$?
 
@@ -158,12 +164,12 @@ if [ $PYTHON_EXIT_CODE -eq 0 ]; then
     echo "📊 Results:"
     if [ -d "outputs_improved/models" ]; then
         echo "   Models:"
-        ls -lh outputs_improved/models/*.keras 2>/dev/null | tail -5
+        ls -lh outputs_improved/models/*v3*.keras 2>/dev/null | tail -5
     fi
     if [ -d "outputs_improved/logs" ]; then
         echo ""
         echo "   Logs:"
-        ls -lh outputs_improved/logs/*.json 2>/dev/null | tail -5
+        ls -lh outputs_improved/logs/*v3*.csv 2>/dev/null | tail -5
     fi
 else
     echo ""
@@ -183,16 +189,16 @@ if [ ! -z "$JOB_ID" ]; then
     echo "✅ Job submitted successfully!"
     echo ""
     echo "Job ID: $JOB_ID"
-    echo "Output: train_run/output/airogs_improved_${JOB_ID}.out"
-    echo "Errors: train_run/stderr/airogs_improved_${JOB_ID}.err"
+    echo "Output: train_run/output/airogs_improved_v3_${JOB_ID}.out"
+    echo "Errors: train_run/stderr/airogs_improved_v3_${JOB_ID}.err"
     echo ""
     echo "📊 Useful commands:"
-    echo "   squeue -u \$USER                                           # Check job status"
-    echo "   tail -f train_run/output/airogs_improved_${JOB_ID}.out   # Follow training logs"
-    echo "   tail -f train_run/stderr/airogs_improved_${JOB_ID}.err   # Follow error logs"
-    echo "   scancel $JOB_ID                                            # Cancel job"
+    echo "   squeue -u \$USER                                              # Check job status"
+    echo "   tail -f train_run/output/airogs_improved_v3_${JOB_ID}.out   # Follow training logs"
+    echo "   tail -f train_run/stderr/airogs_improved_v3_${JOB_ID}.err   # Follow error logs"
+    echo "   scancel $JOB_ID                                               # Cancel job"
     echo ""
-    echo "🕐 Estimated time: 4-6 hours"
+    echo "🕐 Estimated time: 4-5 hours"
     echo ""
     echo "After training completes, evaluate with:"
     echo "   ./submit_eval_improved.sh"

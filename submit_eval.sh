@@ -4,11 +4,11 @@
 # Usage: ./submit_eval.sh [--model=path] [--data=path] [--time=02:00:00] [--mem=16G] [--cpus=4]
 
 # Default values
-MODEL_PATH="outputs/models/airogs_baseline_efficientnet-b0_20251208_183943_best.h5"
+MODEL_PATH="/user/8/audigiem/FIB/DLMA/MiccaiChallenge/MiccaiChallenge/v4_advanced/models_v5/airogs_v5_final.keras"
 DATA_DIR="dataset/5"
 LABELS_CSV="dataset/train_labels_5.csv"
 BATCH_SIZE=32
-OUTPUT_DIR="evaluation_results"
+OUTPUT_DIR="evaluation_results_b0DA_v5_final"
 MEMORY="16G"
 CPUS="4"
 TIME_LIMIT="02:00:00"

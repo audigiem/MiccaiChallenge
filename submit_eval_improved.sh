@@ -6,14 +6,14 @@
 #
 
 # Default values
-MODEL_PATH=""
+MODEL_PATH="/user/8/audigiem/FIB/DLMA/MiccaiChallenge/MiccaiChallenge/outputs/models/airogs_improved_v3_orig_best.keras"
 DATA_DIR="dataset/5"
 LABELS_CSV="dataset/train_labels_5.csv"
 USE_TTA="--tta"
-USE_CLAHE=""
-MEMORY="24G"
-CPUS="6"
-TIME_LIMIT="03:00:00"
+USE_CLAHE="--clahe"
+MEMORY="32G"
+CPUS="12"
+TIME_LIMIT="08:00:00"
 ENV_PATH="~/MiccaiChallenge/bin/activate"
 JOB_NAME="airogs_eval_improved"
 

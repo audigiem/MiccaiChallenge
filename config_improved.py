@@ -19,7 +19,7 @@ LOGS_DIR = os.path.join(OUTPUT_DIR, "logs")
 
 # Model parameters - Optimized for RTX 6000 (24GB VRAM)
 IMAGE_SIZE = 384
-BATCH_SIZE = 16  # Reduced from 32 for RTX 6000 stability
+BATCH_SIZE = 32  # Reduced from 32 for RTX 6000 stability
 EPOCHS = 30
 LEARNING_RATE = 5e-5
 MODEL_BACKBONE = "efficientnet-b0"
@@ -72,4 +72,4 @@ USE_TTA = True
 TTA_AUGMENTATIONS = 5
 
 # GPU settings - RTX 6000 compatible
-USE_MIXED_PRECISION = False  # Disabled for RTX 6000 stability
+USE_MIXED_PRECISION = True  # Disabled for RTX 6000 stability

@@ -35,7 +35,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Create directories
-mkdir -p run/{stderr,output,logs,checkpoints}
+mkdir -p run/{stderr,output}
 
 # Timestamp
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
