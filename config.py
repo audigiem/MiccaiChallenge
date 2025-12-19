@@ -10,7 +10,7 @@ DATA_DIR = "./dataset/"
 TRAIN_IMAGES_DIR = [
     os.path.join(DATA_DIR, "0"),
     os.path.join(DATA_DIR, "1"),
-    os.path.join(DATA_DIR, "4")
+    os.path.join(DATA_DIR, "4"),
 ]
 TRAIN_LABELS_CSV = os.path.join(DATA_DIR, "train_labels.csv")
 OUTPUT_DIR = "./outputs"

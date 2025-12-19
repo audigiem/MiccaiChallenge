@@ -32,14 +32,20 @@ class AIROGSDataset:
                 dataset_num = os.path.basename(img_dir)
 
                 # Try to use specific labels file first (e.g., train_labels_0.csv)
-                specific_labels = os.path.join(os.path.dirname(self.labels_csv), f"train_labels_{dataset_num}.csv")
+                specific_labels = os.path.join(
+                    os.path.dirname(self.labels_csv), f"train_labels_{dataset_num}.csv"
+                )
 
                 if os.path.exists(specific_labels):
                     labels_file = specific_labels
-                    print(f"\n   📋 Using specific labels: {os.path.basename(specific_labels)}")
+                    print(
+                        f"\n   📋 Using specific labels: {os.path.basename(specific_labels)}"
+                    )
                 else:
                     labels_file = self.labels_csv
-                    print(f"\n   📋 Using global labels: {os.path.basename(labels_file)} (filtering for {img_dir})")
+                    print(
+                        f"\n   📋 Using global labels: {os.path.basename(labels_file)} (filtering for {img_dir})"
+                    )
 
                 df = pd.read_csv(labels_file)
                 df["label"] = (df["class"] == "RG").astype(int)
@@ -47,7 +53,7 @@ class AIROGSDataset:
                     lambda x: os.path.join(img_dir, f"{x}.jpg")
                 )
                 # Filter only existing images
-                df = df[df['image_path'].apply(os.path.exists)]
+                df = df[df["image_path"].apply(os.path.exists)]
 
                 if len(df) > 0:
                     print(f"   Dataset: {img_dir}")
@@ -72,7 +78,7 @@ class AIROGSDataset:
 
         # Always filter for existing images
         initial_count = len(self.df)
-        self.df = self.df[self.df['image_path'].apply(os.path.exists)]
+        self.df = self.df[self.df["image_path"].apply(os.path.exists)]
         filtered_count = initial_count - len(self.df)
 
         if filtered_count > 0:
@@ -87,7 +93,9 @@ class AIROGSDataset:
 
         return self.df
 
-    def split_data(self, train_split=0.7, val_split=0.15, test_split=0.15, random_seed=None):
+    def split_data(
+        self, train_split=0.7, val_split=0.15, test_split=0.15, random_seed=None
+    ):
         """
         Split labels dataframe into train/val/test and store them on the dataset instance.
         Handles the special case where train=0, val=0, test=1.0 by returning
@@ -95,14 +103,22 @@ class AIROGSDataset:
         """
         total = train_split + val_split + test_split
         if not np.isclose(total, 1.0):
-            raise ValueError(f"train_split + val_split + test_split must sum to 1.0 (got {total})")
+            raise ValueError(
+                f"train_split + val_split + test_split must sum to 1.0 (got {total})"
+            )
 
         if self.df is None:
-            raise AttributeError("No dataframe found on dataset. Please call load_data() first.")
+            raise AttributeError(
+                "No dataframe found on dataset. Please call load_data() first."
+            )
         df = self.df
 
         # Special-case: all data as test
-        if np.isclose(train_split, 0.0) and np.isclose(val_split, 0.0) and np.isclose(test_split, 1.0):
+        if (
+            np.isclose(train_split, 0.0)
+            and np.isclose(val_split, 0.0)
+            and np.isclose(test_split, 1.0)
+        ):
             empty = pd.DataFrame(columns=df.columns)
             self.train_df = empty
             self.val_df = empty
@@ -146,8 +162,6 @@ class AIROGSDataset:
 
         return self.train_df, self.val_df, self.test_df
 
-
-
     def create_generators(self, batch_size=32, augment=True):
         """Create data generators for training"""
         # Ensure splits exist
@@ -184,7 +198,9 @@ class AIROGSDataset:
                 width_shift_range=config.AUGMENTATION.get("width_shift_range", 0.1),
                 height_shift_range=config.AUGMENTATION.get("height_shift_range", 0.1),
                 zoom_range=config.AUGMENTATION.get("zoom_range", 0.1),
-                brightness_range=config.AUGMENTATION.get("brightness_range", [0.8, 1.2]),
+                brightness_range=config.AUGMENTATION.get(
+                    "brightness_range", [0.8, 1.2]
+                ),
                 fill_mode="constant",
                 cval=0,
             )
@@ -199,7 +215,9 @@ class AIROGSDataset:
                 return None
             # Validate required columns before calling keras
             if "image_path" not in df.columns or "label" not in df.columns:
-                raise KeyError("DataFrame must contain 'image_path' and 'label' columns before creating generator.")
+                raise KeyError(
+                    "DataFrame must contain 'image_path' and 'label' columns before creating generator."
+                )
             return datagen.flow_from_dataframe(
                 df,
                 x_col="image_path",
@@ -216,6 +234,7 @@ class AIROGSDataset:
         test_generator = make_generator(val_datagen, test_df, shuffle=False)
 
         return train_generator, val_generator, test_generator
+
 
 def preprocess_image(image_path, image_size=384):
     """Preprocess a single image"""

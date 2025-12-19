@@ -121,9 +121,15 @@ def evaluate_model(model, test_generator, test_df):
     print(f"   y_true shape: {y_true.shape}")
     print(f"   y_pred_proba contains NaN: {np.isnan(y_pred_proba).any()}")
     print(f"   Number of NaN in predictions: {np.isnan(y_pred_proba).sum()}")
-    print(f"   y_pred_proba min: {np.nanmin(y_pred_proba) if not np.all(np.isnan(y_pred_proba)) else 'all NaN'}")
-    print(f"   y_pred_proba max: {np.nanmax(y_pred_proba) if not np.all(np.isnan(y_pred_proba)) else 'all NaN'}")
-    print(f"   y_pred_proba mean: {np.nanmean(y_pred_proba) if not np.all(np.isnan(y_pred_proba)) else 'all NaN'}")
+    print(
+        f"   y_pred_proba min: {np.nanmin(y_pred_proba) if not np.all(np.isnan(y_pred_proba)) else 'all NaN'}"
+    )
+    print(
+        f"   y_pred_proba max: {np.nanmax(y_pred_proba) if not np.all(np.isnan(y_pred_proba)) else 'all NaN'}"
+    )
+    print(
+        f"   y_pred_proba mean: {np.nanmean(y_pred_proba) if not np.all(np.isnan(y_pred_proba)) else 'all NaN'}"
+    )
 
     # Check for size mismatch
     if len(y_pred_proba) != len(y_true):
@@ -135,7 +141,9 @@ def evaluate_model(model, test_generator, test_df):
     # Handle NaN values
     if np.isnan(y_pred_proba).any():
         nan_count = np.isnan(y_pred_proba).sum()
-        print(f"\n⚠️  WARNING: Found {nan_count} NaN values in predictions ({100*nan_count/len(y_pred_proba):.2f}%)!")
+        print(
+            f"\n⚠️  WARNING: Found {nan_count} NaN values in predictions ({100*nan_count/len(y_pred_proba):.2f}%)!"
+        )
         print(f"   This usually means:")
         print(f"   1. Model encountered invalid images")
         print(f"   2. Generator and DataFrame are out of sync")
@@ -143,7 +151,11 @@ def evaluate_model(model, test_generator, test_df):
 
         # Try to identify which samples have NaN
         nan_indices = np.where(np.isnan(y_pred_proba))[0]
-        print(f"\n   NaN at indices: {nan_indices[:10]}..." if len(nan_indices) > 10 else f"\n   NaN at indices: {nan_indices}")
+        print(
+            f"\n   NaN at indices: {nan_indices[:10]}..."
+            if len(nan_indices) > 10
+            else f"\n   NaN at indices: {nan_indices}"
+        )
 
         # Check if ALL non-NaN predictions are also 0.0
         non_nan_preds = y_pred_proba[~np.isnan(y_pred_proba)]
@@ -158,18 +170,23 @@ def evaluate_model(model, test_generator, test_df):
                 print(f"      Sample values: {unique_values[:10]}")
 
             if len(unique_values) == 1 and unique_values[0] == 0.0:
-                print(f"\n   🔴 CRITIQUE: Toutes les prédictions non-NaN sont exactement 0.0!")
-                print(f"   Cela indique que le modèle n'a pas été entraîné correctement.")
+                print(
+                    f"\n   🔴 CRITIQUE: Toutes les prédictions non-NaN sont exactement 0.0!"
+                )
+                print(
+                    f"   Cela indique que le modèle n'a pas été entraîné correctement."
+                )
                 print(f"\n   💡 ACTIONS RECOMMANDÉES:")
                 print(f"      1. Vérifiez que le fichier de modèle est complet:")
-                print(f"         ls -lh {test_df.iloc[0]['image_path'].rsplit('/', 2)[0]}/../outputs/models/")
+                print(
+                    f"         ls -lh {test_df.iloc[0]['image_path'].rsplit('/', 2)[0]}/../outputs/models/"
+                )
                 print(f"      2. Exécutez: python3 inspect_model.py <model_path>")
                 print(f"      3. Vérifiez les logs d'entraînement")
                 print(f"      4. Si nécessaire, ré-entraînez le modèle")
 
         raise ValueError(
-            f"Predictions contain {nan_count} NaN values. "
-            "Cannot compute metrics."
+            f"Predictions contain {nan_count} NaN values. " "Cannot compute metrics."
         )
 
     # Standard metrics
@@ -397,14 +414,28 @@ def plot_prediction_distribution(results, save_path=None, show=False):
 
     return plt.gcf() if show else None
 
+
 def main():
     parser = argparse.ArgumentParser(description="Évaluation du modèle AIROGS")
-    parser.add_argument("--model-path", type=str, required=True, help="Chemin du modèle .h5")
-    parser.add_argument("--data-dir", type=str, required=True, help="Répertoire des images")
+    parser.add_argument(
+        "--model-path", type=str, required=True, help="Chemin du modèle .h5"
+    )
+    parser.add_argument(
+        "--data-dir", type=str, required=True, help="Répertoire des images"
+    )
     parser.add_argument("--labels-csv", type=str, required=True, help="CSV des labels")
     parser.add_argument("--batch-size", type=int, default=32, help="Batch size")
-    parser.add_argument("--output-dir", type=str, default="evaluation_results", help="Répertoire de sortie pour les figures et résultats")
-    parser.add_argument("--show-plots", action="store_true", help="Afficher les graphiques (pour exécution locale)")
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default="evaluation_results",
+        help="Répertoire de sortie pour les figures et résultats",
+    )
+    parser.add_argument(
+        "--show-plots",
+        action="store_true",
+        help="Afficher les graphiques (pour exécution locale)",
+    )
     args = parser.parse_args()
 
     # Créer le répertoire de sortie
@@ -423,11 +454,13 @@ def main():
     dataset.load_data()
 
     # AJOUT : Filtrer uniquement les images qui existent réellement
-    dataset.df = dataset.df[dataset.df['image_path'].apply(os.path.exists)]
+    dataset.df = dataset.df[dataset.df["image_path"].apply(os.path.exists)]
     print(f"✅ Images valides trouvées : {len(dataset.df)}")
 
     if len(dataset.df) == 0:
-        raise ValueError(f"❌ Aucune image trouvée dans {args.data_dir}. Vérifiez le chemin.")
+        raise ValueError(
+            f"❌ Aucune image trouvée dans {args.data_dir}. Vérifiez le chemin."
+        )
 
     print(f"   RG (Glaucoma): {(dataset.df['label'] == 1).sum()}")
     print(f"   NRG (No Glaucoma): {(dataset.df['label'] == 0).sum()}")
@@ -439,7 +472,7 @@ def main():
     valid_files = []
 
     for idx, row in dataset.df.iterrows():
-        img_path = row['image_path']
+        img_path = row["image_path"]
         if not os.path.exists(img_path):
             missing_files.append(img_path)
         elif os.path.getsize(img_path) == 0:
@@ -458,7 +491,7 @@ def main():
     # Filtrer à nouveau pour être sûr (au cas où)
     if missing_files or corrupted_files:
         print(f"\n🔧 Nettoyage des fichiers invalides...")
-        dataset.df = dataset.df[dataset.df['image_path'].isin(valid_files)]
+        dataset.df = dataset.df[dataset.df["image_path"].isin(valid_files)]
         print(f"   Dataset final: {len(dataset.df)} images")
 
     # Utiliser toutes les données comme test (pas de split)
@@ -486,7 +519,6 @@ def main():
 
     print(f"   ✅ Cohérence OK: {len(test_df)} échantillons")
 
-
     # Évaluation
     print("\n🔎 Évaluation du modèle sur le jeu de test...")
     results = evaluate_model(model, test_gen, test_df)
@@ -500,9 +532,15 @@ def main():
         f.write("=" * 60 + "\n\n")
         f.write("CHALLENGE METRICS:\n")
         f.write(f"  α - Partial AUC (90-100% spec): {results['partial_auc']:.4f}\n")
-        f.write(f"  β - Sensitivity @ 95% spec:     {results['sensitivity_at_95_specificity']:.4f}\n")
-        f.write(f"      (actual specificity:         {results['actual_specificity']:.4f})\n")
-        f.write(f"      (threshold used:             {results['threshold_at_95_spec']:.4f})\n\n")
+        f.write(
+            f"  β - Sensitivity @ 95% spec:     {results['sensitivity_at_95_specificity']:.4f}\n"
+        )
+        f.write(
+            f"      (actual specificity:         {results['actual_specificity']:.4f})\n"
+        )
+        f.write(
+            f"      (threshold used:             {results['threshold_at_95_spec']:.4f})\n\n"
+        )
         f.write("STANDARD METRICS:\n")
         f.write(f"  AUC-ROC:      {results['auc']:.4f}\n")
         f.write(f"  Accuracy:     {results['accuracy']:.4f}\n")
@@ -530,6 +568,7 @@ def main():
     plot_prediction_distribution(results, save_path=dist_path, show=args.show_plots)
 
     print("\n✅ Évaluation terminée avec succès!")
+
 
 if __name__ == "__main__":
     # "python evaluation.py --model-path='firstModel.h5' --data-dir='5' --labels-csv='train_labels.csv' --batch-size=32"

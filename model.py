@@ -8,6 +8,7 @@ from tensorflow.keras.applications import EfficientNetB0, ResNet50, EfficientNet
 import config
 import os
 
+
 def create_baseline_model(
     backbone="efficientnet-b0", input_shape=(384, 384, 3), num_classes=1
 ):
@@ -60,9 +61,13 @@ def create_baseline_model(
 
     # Classification head with stronger regularization
     x = layers.Dropout(0.5)(x)  # Increased from 0.3
-    x = layers.Dense(256, activation="relu", kernel_regularizer=regularizers.l2(0.001))(x)
+    x = layers.Dense(256, activation="relu", kernel_regularizer=regularizers.l2(0.001))(
+        x
+    )
     x = layers.Dropout(0.5)(x)  # Increased from 0.3
-    x = layers.Dense(128, activation="relu", kernel_regularizer=regularizers.l2(0.001))(x)
+    x = layers.Dense(128, activation="relu", kernel_regularizer=regularizers.l2(0.001))(
+        x
+    )
     x = layers.Dropout(0.4)(x)  # Increased from 0.2
 
     # Output layer (sigmoid for binary classification)

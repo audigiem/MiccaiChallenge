@@ -14,7 +14,7 @@ DATA_DIR = os.path.join(PARENT_DIR, "dataset")
 TRAIN_IMAGES_DIR = [
     os.path.join(DATA_DIR, "0"),
     os.path.join(DATA_DIR, "1"),
-    os.path.join(DATA_DIR, "4")
+    os.path.join(DATA_DIR, "4"),
 ]
 TRAIN_LABELS_CSV = os.path.join(DATA_DIR, "train_labels.csv")
 
@@ -56,13 +56,13 @@ RANDOM_SEED = 42
 
 # MODERATE augmentation (same as V4 - worked well)
 AUGMENTATION = {
-    'rotation_range': 15,
-    'width_shift_range': 0.1,
-    'height_shift_range': 0.1,
-    'horizontal_flip': True,
-    'zoom_range': 0.1,
-    'fill_mode': 'constant',
-    'cval': 0
+    "rotation_range": 15,
+    "width_shift_range": 0.1,
+    "height_shift_range": 0.1,
+    "horizontal_flip": True,
+    "zoom_range": 0.1,
+    "fill_mode": "constant",
+    "cval": 0,
 }
 
 # V4 Advanced Preprocessing (KEEP - worked well)
@@ -76,7 +76,7 @@ OD_FALLBACK_TO_FULL = True  # Use full image if OD detection fails
 
 # Advanced CLAHE - LAB color space (KEEP - working well)
 USE_CLAHE = True
-CLAHE_COLOR_SPACE = 'LAB'  # LAB, HSV, or RGB
+CLAHE_COLOR_SPACE = "LAB"  # LAB, HSV, or RGB
 CLAHE_CLIP_LIMIT = 2.0
 CLAHE_TILE_SIZE = 8
 
@@ -91,8 +91,8 @@ REDUCE_LR_FACTOR = 0.5  # KEEP
 MIN_LR = 1e-7
 
 # Monitoring metric for callbacks
-MONITOR_METRIC = 'val_auc'  # Focus on AUC, not loss
-MONITOR_MODE = 'max'
+MONITOR_METRIC = "val_auc"  # Focus on AUC, not loss
+MONITOR_MODE = "max"
 
 # Mixed precision training
 USE_MIXED_PRECISION = False

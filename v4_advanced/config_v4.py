@@ -10,7 +10,7 @@ DATA_DIR = "dataset/"
 TRAIN_IMAGES_DIR = [
     os.path.join(DATA_DIR, "0"),
     os.path.join(DATA_DIR, "1"),
-    os.path.join(DATA_DIR, "4")
+    os.path.join(DATA_DIR, "4"),
 ]
 TRAIN_LABELS_CSV = os.path.join(DATA_DIR, "train_labels.csv")
 
@@ -70,13 +70,13 @@ OD_FALLBACK_TO_FULL = True  # Use full image if OD not detected
 USE_CLAHE = True
 CLAHE_CLIP_LIMIT = 2.0
 CLAHE_TILE_SIZE = 8
-CLAHE_COLOR_SPACE = 'LAB'  # 'LAB', 'HSV', or 'RGB'
+CLAHE_COLOR_SPACE = "LAB"  # 'LAB', 'HSV', or 'RGB'
 
 # Vessel Enhancement (Experimental - can disable)
 USE_VESSEL_ENHANCEMENT = False  # Start False, can enable after testing
 
 # Preprocessing mode
-PREPROCESS_MODE = 'on_the_fly'  # 'on_the_fly' or 'precomputed'
+PREPROCESS_MODE = "on_the_fly"  # 'on_the_fly' or 'precomputed'
 # 'on_the_fly': Apply preprocessing during training (slower but flexible)
 # 'precomputed': Preprocess entire dataset once and save (faster training)
 

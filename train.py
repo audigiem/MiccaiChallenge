@@ -22,8 +22,12 @@ def setup_gpu():
 
     # Display environment variables for debugging
     print("\n🔍 GPU Environment Check:")
-    print(f"  CUDA_VISIBLE_DEVICES: {os.environ.get('CUDA_VISIBLE_DEVICES', 'Not set')}")
-    print(f"  TF_CPP_MIN_LOG_LEVEL: {os.environ.get('TF_CPP_MIN_LOG_LEVEL', 'Not set')}")
+    print(
+        f"  CUDA_VISIBLE_DEVICES: {os.environ.get('CUDA_VISIBLE_DEVICES', 'Not set')}"
+    )
+    print(
+        f"  TF_CPP_MIN_LOG_LEVEL: {os.environ.get('TF_CPP_MIN_LOG_LEVEL', 'Not set')}"
+    )
 
     # Check for GPU devices
     gpus = tf.config.list_physical_devices("GPU")
@@ -109,10 +113,7 @@ def train_model(args):
 
     dataset_dirs = config.TRAIN_IMAGES_DIR
 
-
-    dataset = AIROGSDataset(
-        labels_csv=config.TRAIN_LABELS_CSV, images_dir=dataset_dirs
-    )
+    dataset = AIROGSDataset(labels_csv=config.TRAIN_LABELS_CSV, images_dir=dataset_dirs)
 
     dataset.load_data()
 
